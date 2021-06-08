@@ -1,0 +1,30 @@
+version: '3'
+services:
+  whatisglass_api:
+    restart: always
+    build: .
+    image: whatisglass-api
+    container_name: 'whatisglass-api'
+    working_dir: '/app'
+    ports:
+    - 8080:8080
+    links:
+      - whatisglass_mysql
+    tty: true
+    volumes:
+      - ./app:/app
+  whatisglass_mysql:
+    container_name: whatisglass-mysql
+    image: mysql:8.0
+    ports:
+    - 3306:3306
+    volumes:
+    - ./mysql/db/mysql_init:/docker-entrypoint-initdb.d
+    - ./mysql/db/mysql_data:/var/lib/mysql
+    - ./mysql/db/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: whatisglass
+      MYSQL_USER: glass
+      MYSQL_PASSWORD: glass
+      TZ: "Asia/Tokyo"
