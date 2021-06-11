@@ -8,7 +8,6 @@ user_router = Blueprint("user_router", __name__)
 
 @user_router.route("/users", methods=["GET"])
 def getUserList():
-    print("aaaaaaaaaaaaaa")
     users = User.getUserList()
     user_schema = UserSchema(many=True)
 
