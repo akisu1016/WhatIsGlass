@@ -5,10 +5,10 @@ class User(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(50), nullable=False)
-    address = db.Column(db.String(100), nullable=True)
-    tel = db.Column(db.String(20), nullable=True)
-    mail = db.Column(db.String(100), nullable=True)
+    username = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(30), nullable=False)
+    icon = db.Column(db.String(300), nullable=True)
 
     def __repr__(self):
         return "<User %r>" % self.name
@@ -25,10 +25,11 @@ class User(db.Model):
 
     def registUser(user):
         record = User(
-            name=user["name"],
-            address=user["address"],
-            tel=user["tel"],
-            mail=user["mail"],
+            id=user["id"],
+            username=user["username"],
+            email=user["email"],
+            password=user["password"],
+            icon=user["icon"],
         )
 
         # insert into users(name, address, tel, mail) values(...)
@@ -42,4 +43,4 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
         load_instance = True
-        fields = ("id", "name", "address", "tel", "mail")
+        fields = ("id", "username", "email", "password", "icon")

@@ -11,7 +11,7 @@ def getUserList():
     users = User.getUserList()
     user_schema = UserSchema(many=True)
 
-    return make_response(jsonify({"code": 200, "users": user_schema.dump(users).data}))
+    return make_response(jsonify({"code": 200, "users": user_schema.dump(users)}))
 
 
 @user_router.route("/users", methods=["POST"])
