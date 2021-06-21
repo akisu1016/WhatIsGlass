@@ -1,4 +1,7 @@
+import re
 from api.database import db, ma
+from sqlalchemy import *
+from .answer import Answer
 import datetime
 
 
@@ -15,11 +18,63 @@ class Index(db.Model):
     def __repr__(self):
         return "<Index %r>" % self.name
 
-    def getIndexList():
+    def getIndexList(request_dict):
 
-        index_list = db.session.query(Index).all()
+        sort = request_dict["sort"]
+        language_id = request_dict["language_id"]
+        include_no_answer = request_dict["include_no_answer"]
+        keyword = request_dict["keyword"]
 
-        if index_list == None:
+        sort_terms = "date"
+        if sort == "1":
+            sort_terms = "date"
+        elif sort == "2":
+            sort_terms = "frequently_used_count"
+        # elif sort == "3":
+        #     sort_terms = "frequently_used_count"
+
+        index_list = null
+
+        if include_no_answer == "true":
+            index_list = (
+                db.session.query(
+                    Index.id,
+                    Index.index,
+                    Index.questioner,
+                    Index.frequently_used_count,
+                    Index.language_id,
+                    Index.date,
+                    Answer.definition.label("best_answer"),
+                )
+                .outerjoin(Answer, Index.id == Answer.index_id)
+                .filter(
+                    Index.index.contains(f"%{keyword}%"),
+                    Index.language_id == language_id,
+                )
+                .order_by(asc(text(f"indices.{sort_terms}")))
+                .all()
+            )
+        elif include_no_answer == "false":
+            index_list = (
+                db.session.query(
+                    Index.id,
+                    Index.index,
+                    Index.questioner,
+                    Index.frequently_used_count,
+                    Index.language_id,
+                    Index.date,
+                    Answer.definition.label("best_answer"),
+                )
+                .join(Answer, Index.id == Answer.index_id)
+                .filter(
+                    Index.index.contains(f"%{keyword}%"),
+                    Index.language_id == language_id,
+                )
+                .order_by(asc(text(f"indices.{sort_terms}")))
+                .all()
+            )
+
+        if index_list == null:
             return []
         else:
             return index_list
@@ -56,4 +111,11 @@ class IndexSchema(ma.SQLAlchemyAutoSchema):
             "language_id",
             "frequently_used_count",
             "date",
+            "user_id",
+            "index_id",
+            "definition",
+            "origin",
+            "note",
+            "informative_count",
+            "best_answer",
         )
