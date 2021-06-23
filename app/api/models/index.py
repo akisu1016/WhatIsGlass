@@ -25,13 +25,13 @@ class Index(db.Model):
         include_no_answer = request_dict["include_no_answer"]
         keyword = request_dict["keyword"]
 
-        sort_terms = "date"
+        sort_terms = "indices.date"
         if sort == "1":
-            sort_terms = "date"
+            sort_terms = "indices.date"
         elif sort == "2":
-            sort_terms = "frequently_used_count"
+            sort_terms = "indices.frequently_used_count, indices.date"
         elif sort == "3":
-            sort_terms = "answer_count"
+            sort_terms = "indices.date, answer_count"
 
         index_list = null
 
@@ -76,7 +76,7 @@ class Index(db.Model):
                     Index.frequently_used_count,
                     Index.language_id,
                     Index.date,
-                    answer_count.c.answer_count,
+                    answer_count.c.answer_count.label("answer_count"),
                     best_answer.c.best_answer,
                 )
                 .join(Answer, Index.id == Answer.index_id)
@@ -87,7 +87,7 @@ class Index(db.Model):
                     Index.id == best_answer.c.index_id,
                 )
                 .distinct(Index.id)
-                .order_by(asc(text(f"indices.{sort_terms}")))
+                .order_by(desc(text(f"{sort_terms}")))
                 .all()
             )
         elif include_no_answer == "false":
@@ -99,7 +99,7 @@ class Index(db.Model):
                     Index.frequently_used_count,
                     Index.language_id,
                     Index.date,
-                    answer_count.c.answer_count,
+                    answer_count.c.answer_count.label("answer_count"),
                     best_answer.c.best_answer,
                 )
                 .outerjoin(Answer, Index.id == Answer.index_id)
@@ -110,32 +110,32 @@ class Index(db.Model):
                     Index.id == best_answer.c.index_id,
                 )
                 .distinct(Index.id)
-                .order_by(asc(text(f"indices.{sort_terms}")))
+                .order_by(desc(text(f"{sort_terms}")))
                 .all()
             )
 
-            # query = (
-            #     db.session.query(
-            #         Index.id,
-            #         Index.index,
-            #         Index.questioner,
-            #         Index.frequently_used_count,
-            #         Index.language_id,
-            #         Index.date,
-            #         answer_count.c.answer_count,
-            #         best_answer.c.best_answer,
-            #     )
-            #     .join(Answer, Index.id == Answer.index_id)
-            #     .filter(
-            #         Index.index.contains(f"%{keyword}%"),
-            #         Index.language_id == language_id,
-            #         Index.id == answer_count.c.index_id,
-            #         Index.id == best_answer.c.index_id,
-            #     )
-            #     .distinct(Index.id)
-            #     .order_by(asc(text(f"indices.{sort_terms}")))
-            # )
-            # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+            query = (
+                db.session.query(
+                    Index.id,
+                    Index.index,
+                    Index.questioner,
+                    Index.frequently_used_count,
+                    Index.language_id,
+                    Index.date,
+                    answer_count.c.answer_count,
+                    best_answer.c.best_answer,
+                )
+                .join(Answer, Index.id == Answer.index_id)
+                .filter(
+                    Index.index.contains(f"%{keyword}%"),
+                    Index.language_id == language_id,
+                    Index.id == answer_count.c.index_id,
+                    Index.id == best_answer.c.index_id,
+                )
+                .distinct(Index.id)
+                .order_by(asc(text(f"{sort_terms}")))
+            )
+            print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         if index_list == null:
             return []
