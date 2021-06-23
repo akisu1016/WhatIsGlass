@@ -30,10 +30,42 @@ class Index(db.Model):
             sort_terms = "date"
         elif sort == "2":
             sort_terms = "frequently_used_count"
-        # elif sort == "3":
-        #     sort_terms = "frequently_used_count"
+        elif sort == "3":
+            sort_terms = "answer_count"
 
         index_list = null
+
+        # 回答者数を取得するためのクエリ
+        answer_count = (
+            db.session.query(
+                Answer.index_id, func.count(Answer.index_id).label("answer_count")
+            )
+            .group_by(Answer.index_id)
+            .subquery("answer_count")
+        )
+
+        # ベストアンサーを一覧取得するためのクエリ
+        max_informative = (
+            db.session.query(
+                Answer.index_id, func.max(Answer.informative_count).label("max_count")
+            )
+            .group_by(Answer.index_id)
+            .subquery("max_informative")
+        )
+
+        best_answer = (
+            db.session.query(
+                Answer.index_id, func.any_value(Answer.definition).label("best_answer")
+            )
+            .join(
+                max_informative,
+                Answer.index_id == max_informative.c.index_id,
+            )
+            .filter(Answer.informative_count == max_informative.c.max_count)
+            .group_by(Answer.index_id)
+            .having(func.max(Answer.date))
+            .subquery("best_answer")
+        )
 
         if include_no_answer == "true":
             index_list = (
@@ -44,13 +76,17 @@ class Index(db.Model):
                     Index.frequently_used_count,
                     Index.language_id,
                     Index.date,
-                    Answer.definition.label("best_answer"),
+                    answer_count.c.answer_count,
+                    best_answer.c.best_answer,
                 )
-                .outerjoin(Answer, Index.id == Answer.index_id)
+                .join(Answer, Index.id == Answer.index_id)
                 .filter(
                     Index.index.contains(f"%{keyword}%"),
                     Index.language_id == language_id,
+                    Index.id == answer_count.c.index_id,
+                    Index.id == best_answer.c.index_id,
                 )
+                .distinct(Index.id)
                 .order_by(asc(text(f"indices.{sort_terms}")))
                 .all()
             )
@@ -63,16 +99,43 @@ class Index(db.Model):
                     Index.frequently_used_count,
                     Index.language_id,
                     Index.date,
-                    Answer.definition.label("best_answer"),
+                    answer_count.c.answer_count,
+                    best_answer.c.best_answer,
                 )
-                .join(Answer, Index.id == Answer.index_id)
+                .outerjoin(Answer, Index.id == Answer.index_id)
                 .filter(
                     Index.index.contains(f"%{keyword}%"),
                     Index.language_id == language_id,
+                    Index.id == answer_count.c.index_id,
+                    Index.id == best_answer.c.index_id,
                 )
+                .distinct(Index.id)
                 .order_by(asc(text(f"indices.{sort_terms}")))
                 .all()
             )
+
+            # query = (
+            #     db.session.query(
+            #         Index.id,
+            #         Index.index,
+            #         Index.questioner,
+            #         Index.frequently_used_count,
+            #         Index.language_id,
+            #         Index.date,
+            #         answer_count.c.answer_count,
+            #         best_answer.c.best_answer,
+            #     )
+            #     .join(Answer, Index.id == Answer.index_id)
+            #     .filter(
+            #         Index.index.contains(f"%{keyword}%"),
+            #         Index.language_id == language_id,
+            #         Index.id == answer_count.c.index_id,
+            #         Index.id == best_answer.c.index_id,
+            #     )
+            #     .distinct(Index.id)
+            #     .order_by(asc(text(f"indices.{sort_terms}")))
+            # )
+            # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         if index_list == null:
             return []
@@ -118,4 +181,5 @@ class IndexSchema(ma.SQLAlchemyAutoSchema):
             "note",
             "informative_count",
             "best_answer",
+            "answer_count",
         )
