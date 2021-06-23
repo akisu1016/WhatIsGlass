@@ -75,13 +75,18 @@ CREATE TABLE indices(
     id INT PRIMARY KEY AUTO_INCREMENT,
     `index` varchar(50) NOT NULL,
     questioner INT NOT NULL,
+    language_id INT NOT NULL,
     frequently_used_count INT NOT NULL default 0,
-    `date` TIMESTAMP NOT NULL default CURRENT_TIMESTAMP
+    `date` TIMESTAMP NOT NULL default CURRENT_TIMESTAMP,
+    FOREIGN KEY (questioner)
+        REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (language_id)
+        REFERENCES languages(id) ON DELETE CASCADE
 );
 
-INSERT INTO indices(id, `index`, questioner) VALUES
-(0, 'enjoy', 2),
-(0, '草', 1);
+INSERT INTO indices(id, `index`, questioner, language_id) VALUES
+(0, 'enjoy', 1, 1),
+(0, '草', 2, 2);
 
 CREATE TABLE categorytags(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -153,4 +158,3 @@ CREATE TABLE favorite_indices(
     FOREIGN KEY (index_id)
         REFERENCES indices(id) ON DELETE CASCADE
 );
-
