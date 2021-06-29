@@ -3,6 +3,7 @@ from api.database import db, ma
 from sqlalchemy import *
 from .answer import Answer
 import datetime
+from sqlalchemy.dialects import mysql
 
 
 class Index(db.Model):
@@ -38,9 +39,11 @@ class Index(db.Model):
         # 回答者数を取得するためのクエリ
         answer_count = (
             db.session.query(
-                Answer.index_id, func.count(Answer.index_id).label("answer_count")
+                Index.id.label("index_id"),
+                func.count(Answer.index_id).label("answer_count"),
             )
-            .group_by(Answer.index_id)
+            .outerjoin(Answer, Index.id == Answer.index_id)
+            .group_by(Index.id)
             .subquery("answer_count")
         )
 
@@ -79,12 +82,11 @@ class Index(db.Model):
                     answer_count.c.answer_count.label("answer_count"),
                     best_answer.c.best_answer,
                 )
-                .join(Answer, Index.id == Answer.index_id)
+                .outerjoin(best_answer, Index.id == best_answer.c.index_id)
                 .filter(
                     Index.index.contains(f"%{keyword}%"),
                     Index.language_id == language_id,
                     Index.id == answer_count.c.index_id,
-                    Index.id == best_answer.c.index_id,
                 )
                 .distinct(Index.id)
                 .order_by(desc(text(f"{sort_terms}")))
@@ -102,40 +104,43 @@ class Index(db.Model):
                     answer_count.c.answer_count.label("answer_count"),
                     best_answer.c.best_answer,
                 )
-                .outerjoin(Answer, Index.id == Answer.index_id)
+                .join(best_answer, Index.id == best_answer.c.index_id)
                 .filter(
                     Index.index.contains(f"%{keyword}%"),
                     Index.language_id == language_id,
                     Index.id == answer_count.c.index_id,
-                    Index.id == best_answer.c.index_id,
                 )
                 .distinct(Index.id)
                 .order_by(desc(text(f"{sort_terms}")))
                 .all()
             )
 
-            query = (
-                db.session.query(
-                    Index.id,
-                    Index.index,
-                    Index.questioner,
-                    Index.frequently_used_count,
-                    Index.language_id,
-                    Index.date,
-                    answer_count.c.answer_count,
-                    best_answer.c.best_answer,
-                )
-                .join(Answer, Index.id == Answer.index_id)
-                .filter(
-                    Index.index.contains(f"%{keyword}%"),
-                    Index.language_id == language_id,
-                    Index.id == answer_count.c.index_id,
-                    Index.id == best_answer.c.index_id,
-                )
-                .distinct(Index.id)
-                .order_by(asc(text(f"{sort_terms}")))
-            )
-            print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # test = (
+        #     db.session.query(
+        #         Index.id,
+        #         Index.index,
+        #         Index.questioner,
+        #         Index.frequently_used_count,
+        #         Index.language_id,
+        #         Index.date,
+        #         answer_count.c.answer_count.label("answer_count"),
+        #         best_answer.c.best_answer,
+        #     )
+        #     .outerjoin(best_answer, Index.id == best_answer.c.index_id)
+        #     .filter(
+        #         Index.index.contains(f"%{keyword}%"),
+        #         Index.language_id == language_id,
+        #         Index.id == answer_count.c.index_id,
+        #     )
+        #     .distinct(Index.id)
+        #     .order_by(desc(text(f"{sort_terms}")))
+        # )
+
+        # print(
+        #     test.statement.compile(
+        #         dialect=mysql.dialect(), compile_kwargs={"literal_binds": True}
+        #     )
+        # )
 
         if index_list == null:
             return []
