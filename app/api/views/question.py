@@ -22,6 +22,7 @@ def getIndexList():
             "language_id": contents.get("language_id"),
             "include_no_answer": contents.get("include_no_answer"),
             "keyword": contents.get("keyword"),
+            "index_limit": contents.get("index_limit"),
         }
         indices = Index.getIndexList(request_dict)
         index_schema = IndexSchema(many=True)
