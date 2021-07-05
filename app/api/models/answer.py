@@ -1,5 +1,6 @@
-import re
 from api.database import db, ma
+from sqlalchemy import create_engine, text
+from .example import Example
 import datetime
 
 
@@ -16,17 +17,56 @@ class Answer(db.Model):
     date = db.Column(db.TIMESTAMP, nullable=True)
 
     def __repr__(self):
-        return "<Answer %r>" % self.name
+        return "<Answer %r>" % self.definition
 
-    def getAnswerList():
+    def getAnswerList(request_index_id):
 
         # select * from users
-        answer_list = db.session.query(Answer).all()
+        answer_list = (
+            db.session.query(Answer)
+            .filter(request_index_id["index_id"] == Answer.index_id)
+            .all()
+        )
 
-        if answer_list == None:
+        if answer_list is None:
             return []
         else:
             return answer_list
+
+    def registAnswer(answer):
+
+        record = Answer(
+            id=0,
+            user_id=1,
+            informative_count=0,
+            index_id=answer["index_id"],
+            definition=answer["definition"],
+            origin=answer["origin"],
+            note=answer["note"],
+            date=datetime.datetime.now(),
+        )
+
+        # insert into answers(id, user_id, informative_count...) values(...)
+        db.session.add(record)
+        db.session.flush()
+        db.session.commit()
+
+        # exampleの登録処理(example.py作成時に記入予定)
+        if not answer["example"]:
+            return []
+        else:
+            for examplelist in answer["example"]:
+                answer_query = db.session.execute(
+                    "SELECT id from answers WHERE id = last_insert_id();"
+                )
+
+                sql = (
+                    "INSERT INTO example_answer(example_sentence, answer_id) VALUES('%s', '%d)"
+                    % (examplelist, answer_query[0][0])
+                )
+                db.session.execute(sql)
+
+        return answer
 
 
 class AnswerSchema(ma.SQLAlchemyAutoSchema):
