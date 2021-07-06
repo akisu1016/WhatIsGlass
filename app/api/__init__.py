@@ -4,6 +4,7 @@ from .views.question import question_router
 from .views.example_answer import example_answer_router
 from flask_cors import CORS
 from api.database import db
+from api.token import jwt
 import config
 
 
@@ -18,6 +19,8 @@ def create_app():
     # DB設定を読み込む
     app.config.from_object("config.Config")
     db.init_app(app)
+
+    jwt.init_app(app)
 
     app.register_blueprint(user_router, url_prefix="/api")
     app.register_blueprint(question_router, url_prefix="/api")

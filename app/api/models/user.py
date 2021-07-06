@@ -1,15 +1,16 @@
 import re
 import base64
 import os
-import secrets
-from flask import abort
+from flask import abort, jsonify
 from sqlalchemy.sql.functions import user
 from sqlalchemy.dialects import mysql
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.wrappers import response
+from flask_jwt_extended import create_access_token, set_access_cookies
 from api.database import db, ma
 
-##一応saltも作っておく
+
+##一応saltも作ってお
 salt = base64.b64encode(os.urandom(32))
 
 
@@ -23,17 +24,7 @@ class User(db.Model):
     icon = db.Column(db.String(300), nullable=True)
 
     def __repr__(self):
-        return "<User %r>" % self.name
-
-    def getUserList():
-
-        # select * from users
-        user_list = db.session.query(User).all()
-
-        if user_list == None:
-            return []
-        else:
-            return user_list
+        return "<User %r>" % self.id
 
     def registUser(request_dict):
 
@@ -75,14 +66,17 @@ class User(db.Model):
                 400, {"message": "Please check your login details and try again."}
             )
         else:
+
+            access_token = create_access_token(identity=user)
+            response = jsonify({"msg": "login successful"})
+            set_access_cookies(response, access_token)
+
             login_user = {
                 "id": user.id,
                 "username": user.username,
                 "email": user.email,
-                "token": secrets.token_hex(),
+                "access_token": access_token,
             }
-
-            print(login_user)
 
             return login_user
 
@@ -91,4 +85,4 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
         load_instance = True
-        fields = ("id", "username", "email", "password", "icon", "token")
+        fields = ("id", "username", "email", "password", "icon", "access_token")
