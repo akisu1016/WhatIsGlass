@@ -1,14 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify, abort
 from api.models import User, UserSchema
-from flask_jwt_extended import (
-    get_jwt_identity,
-    current_user,
-    jwt_required,
-    unset_jwt_cookies,
-    get_jwt,
-    create_access_token,
-    set_access_cookies,
-)
+from flask_jwt_extended import jwt_required, unset_jwt_cookies, get_jwt
 from ..token import jwt, Redis
 import json
 
@@ -108,23 +100,3 @@ def postuUserLogout():
     jti = get_jwt()["jti"]
     Redis.set(jti, "")
     return response
-
-
-@user_router.route("/protected", methods=["GET"])
-# @jwt_required(optional=True)
-@jwt_required()
-def protected():
-    # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
-
-
-@user_router.route("/who_am_i", methods=["GET"])
-@jwt_required()
-def whoami():
-    # We can now access our sqlalchemy User object via `current_user`.
-    return jsonify(
-        id=current_user.id,
-        username=current_user.username,
-        email=current_user.email,
-    )
