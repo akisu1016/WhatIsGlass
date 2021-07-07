@@ -28,3 +28,10 @@ services:
       MYSQL_USER: glass
       MYSQL_PASSWORD: glass
       TZ: "Asia/Tokyo"
+  whatisglass_redis:
+    container_name: whatisglass-redis
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./data/redis:/data"

@@ -5,7 +5,7 @@ from .views.example_answer import example_answer_router
 from flask_cors import CORS
 from api.database import db
 from api.token import jwt
-import config
+import redis
 
 
 def create_app():
@@ -16,7 +16,6 @@ def create_app():
     # CORS対応
     CORS(app)
 
-    # DB設定を読み込む
     app.config.from_object("config.Config")
     db.init_app(app)
 

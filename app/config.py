@@ -1,4 +1,4 @@
-import const
+from api import const
 from datetime import timedelta
 
 
@@ -15,7 +15,7 @@ class SystemConfig:
     JWT_SECRET_KEY = const.JWT_SECRET_KEY
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     JWT_COOKIE_SECURE = False
-    WT_ACCESS_TOKEN_EXPIRES = timedelta(hours=72)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=72)
 
 
 Config = SystemConfig

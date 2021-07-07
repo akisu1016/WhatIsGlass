@@ -22,3 +22,4 @@ RUN pip install Flask-JWT-Extended
 RUN pip install marshmallow
 RUN pip install marshmallow-sqlalchemy
 RUN pip install flask-marshmallow
+RUN pip install redis

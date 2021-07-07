@@ -9,11 +9,9 @@ from flask_jwt_extended import (
     create_access_token,
     set_access_cookies,
 )
-from ..token import jwt
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from ..token import jwt, Redis
 import json
+
 
 # ルーティング設定
 user_router = Blueprint("user_router", __name__)
@@ -37,6 +35,14 @@ def user_identity_lookup(user):
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
     return User.query.filter_by(id=identity).one_or_none()
+
+
+# jwtがの有効性を確認するコールバック関数
+@jwt.token_in_blocklist_loader
+def check_if_token_is_revoked(jwt_header, jwt_payload):
+    jti = jwt_payload["jti"]
+    token_in_redis = Redis.get(jti)
+    return token_in_redis is not None
 
 
 @user_router.route("/signup", methods=["POST"])
@@ -95,14 +101,18 @@ def postUserLogin():
 
 
 @user_router.route("/logout", methods=["POST"])
+@jwt_required()
 def postuUserLogout():
-    response = jsonify({"code": 204})
+    response = jsonify({"code": 204, "meg": "Access token revoked"})
     unset_jwt_cookies(response)
+    jti = get_jwt()["jti"]
+    Redis.set(jti, "")
     return response
 
 
 @user_router.route("/protected", methods=["GET"])
-@jwt_required(optional=True)
+# @jwt_required(optional=True)
+@jwt_required()
 def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
