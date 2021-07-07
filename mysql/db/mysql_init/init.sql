@@ -20,7 +20,7 @@ CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username varchar(20) NOT NULL,
     email varchar(254) NOT NULL,
-    password varchar(30) NOT NULL,
+    password varchar(254) NOT NULL,
     icon varchar(300)
 );
 

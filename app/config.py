@@ -1,22 +1,21 @@
-import os
+from api import const
+from datetime import timedelta
 
 
 class SystemConfig:
 
     DEBUG = True
 
-    SQLALCHEMY_DATABASE_URI = (
-        "mysql+pymysql://{user}:{password}@{host}/{database}?charset=utf8mb4".format(
-            **{
-                "user": os.getenv("DB_USER", "glass"),
-                "password": os.getenv("DB_PASSWORD", "glass"),
-                "host": os.getenv("DB_HOST", "whatisglass_mysql"),
-                "database": os.getenv("DB_DATABASE", "whatisglass"),
-            }
-        )
-    )
+    SQLALCHEMY_DATABASE_URI = const.SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
+    SECRET_KEY = const.SECRET_KEY
+
+    # JWT署名鍵
+    JWT_SECRET_KEY = const.JWT_SECRET_KEY
+    JWT_TOKEN_LOCATION = ["headers", "cookies"]
+    JWT_COOKIE_SECURE = False
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=72)
 
 
 Config = SystemConfig

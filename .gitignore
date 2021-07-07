@@ -2,7 +2,11 @@ mysql/db/mysql_data
 .vscode
 .DS_Store
 
+data/redis
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+app/api/const.py
