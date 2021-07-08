@@ -152,3 +152,20 @@ def postUserEdit():
         abort(400, {"message": ValueError})
 
     return make_response(jsonify({"code": 201, "users": user_schema.dump([user])}))
+
+
+@user_router.route("/whoami", methods=["GET"])
+@jwt_required()
+def getLoginUser():
+    return make_response(
+        jsonify(
+            {
+                "code": 201,
+                "users": {
+                    "id": current_user.id,
+                    "username": current_user.username,
+                    "email": current_user.email,
+                },
+            }
+        )
+    )
