@@ -81,12 +81,3 @@ def registIndex():
         abort(400, {"message": ValueError})
 
     return make_response(jsonify({"code": 201, "index": index_schema.dump(index)}))
-
-
-@question_router.route("/protected", methods=["GET"])
-# @jwt_required(optional=True)
-@jwt_required()
-def protected():
-    # Access the identity of the current user with get_jwt_identity
-    # current_user = get_jwt_identity()
-    return jsonify(current_user.email)
