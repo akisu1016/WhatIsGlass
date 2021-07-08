@@ -1,6 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, abort
 from api.models import User, UserSchema
-from flask_jwt_extended import jwt_required, unset_jwt_cookies, get_jwt
+from flask_jwt_extended import jwt_required, unset_jwt_cookies, get_jwt, current_user
+from email_validator import validate_email, EmailNotValidError
 from ..token import jwt, Redis
 import json
 
@@ -53,11 +54,18 @@ def postUserSignup():
     ):
         abort(400, {"message": "parameter is a required"})
 
+    ## emailのバリデーション
+    try:
+        valid = validate_email(userData["email"])
+        userData["email"] = valid.email
+    except EmailNotValidError as e:
+        abort(400, {"message": "email is incorrect"})
+
     try:
         user = User.registUser(userData)
         user_schema = UserSchema(many=True)
     except ValueError:
-        print(ValueError)
+        abort(400, {"message": ValueError})
 
     return make_response(jsonify({"code": 201, "users": user_schema.dump(user)}))
 
@@ -76,11 +84,18 @@ def postUserLogin():
     ):
         abort(400, {"message": "parameter is a required"})
 
+    ## emailのバリデーション
+    try:
+        valid = validate_email(userData["email"])
+        userData["email"] = valid.email
+    except EmailNotValidError as e:
+        abort(400, {"message": "email is incorrect"})
+
     try:
         loginuser = User.loginUser(userData)
         login_user_schema = UserSchema(many=True)
     except ValueError:
-        print(ValueError)
+        abort(400, {"message": ValueError})
 
     return make_response(
         jsonify(
@@ -100,3 +115,40 @@ def postuUserLogout():
     jti = get_jwt()["jti"]
     Redis.set(jti, "")
     return response
+
+
+@user_router.route("user/edit", methods=["POST"])
+@jwt_required()
+def postUserEdit():
+
+    jsonData = json.dumps(request.json)
+    userData = json.loads(jsonData)
+
+    if (
+        userData is None
+        or not "email" in userData
+        and not "username" in userData
+        or userData["email"] == ""
+        and userData["username"] == ""
+    ):
+        abort(400, {"message": "parameter is a required"})
+
+    userData["user_id"] = current_user.id
+    userData["username"] = "" if not "username" in userData else userData["username"]
+    userData["email"] = "" if not "email" in userData else userData["email"]
+
+    ## emailのバリデーション
+    try:
+        valid = validate_email(userData["email"])
+        userData["email"] = valid.email
+    except EmailNotValidError as e:
+        abort(400, {"message": "email is incorrect"})
+
+    try:
+        user = User.editUser(userData)
+        user_schema = UserSchema(many=True)
+        print(user)
+    except ValueError:
+        abort(400, {"message": ValueError})
+
+    return make_response(jsonify({"code": 201, "users": user_schema.dump([user])}))
