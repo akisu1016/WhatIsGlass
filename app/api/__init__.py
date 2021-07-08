@@ -2,6 +2,7 @@ from flask import Flask, make_response, jsonify
 from .views.user import user_router
 from .views.question import question_router
 from .views.answer import answer_router
+from .views.example_answer import example_answer_router
 from flask_cors import CORS
 from api.database import db
 import config
@@ -21,8 +22,8 @@ def create_app():
 
     app.register_blueprint(user_router, url_prefix="/api")
     app.register_blueprint(question_router, url_prefix="/api")
-    # answerのルーティング設定
     app.register_blueprint(answer_router, url_prefix="/api")
+    app.register_blueprint(example_answer_router, url_prefix="/api")
 
     return app
 
