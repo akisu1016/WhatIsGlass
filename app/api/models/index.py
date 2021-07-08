@@ -2,6 +2,7 @@ import re
 from api.database import db, ma
 from sqlalchemy import *
 from .answer import Answer
+from .user import User
 import datetime
 from sqlalchemy.dialects import mysql
 
@@ -17,22 +18,21 @@ class Index(db.Model):
     date = db.Column(db.TIMESTAMP, nullable=True)
 
     def __repr__(self):
-        return "<Index %r>" % self.name
+        return "<Index %r>" % self.id
 
     def getIndexList(request_dict):
-
         # リクエストから取得
         sort = int(request_dict["sort"]) if request_dict["sort"] is not None else 1
         language_id = request_dict["language_id"]
         include_no_answer = (
             int(request_dict["include_no_answer"])
-            if request_dict["include_no_answer"] is not None
+            if request_dict["include_no_answer"] is not ""
             else 1
         )
         keyword = request_dict["keyword"]
         index_limit = (
             int(request_dict["index_limit"])
-            if request_dict["index_limit"] is not None
+            if request_dict["index_limit"] is not ""
             else 300
             if int(request_dict["index_limit"]) > 300
             else 100
@@ -88,7 +88,7 @@ class Index(db.Model):
             db.session.query(
                 Index.id,
                 Index.index,
-                Index.questioner,
+                User.username,
                 Index.frequently_used_count,
                 Index.language_id,
                 Index.date,
@@ -99,6 +99,7 @@ class Index(db.Model):
             .filter(
                 Index.index.contains(f"{keyword}"),
                 Index.language_id == language_id,
+                User.id == Index.questioner,
                 Index.id == answer_count.c.index_id,
             )
             .distinct(Index.id)
@@ -109,7 +110,7 @@ class Index(db.Model):
             else db.session.query(
                 Index.id,
                 Index.index,
-                Index.questioner,
+                User.username,
                 Index.frequently_used_count,
                 Index.language_id,
                 Index.date,
@@ -120,6 +121,7 @@ class Index(db.Model):
             .filter(
                 Index.index.contains(f"{keyword}"),
                 Index.language_id == language_id,
+                User.id == Index.questioner,
                 Index.id == answer_count.c.index_id,
             )
             .distinct(Index.id)
@@ -130,7 +132,7 @@ class Index(db.Model):
             else db.session.query(
                 Index.id,
                 Index.index,
-                Index.questioner,
+                User.username,
                 Index.frequently_used_count,
                 Index.language_id,
                 Index.date,
@@ -142,6 +144,7 @@ class Index(db.Model):
                 Index.index.contains(f"{keyword}"),
                 Index.language_id == language_id,
                 Index.id == answer_count.c.index_id,
+                User.id == Index.questioner,
                 answer_count.c.answer_count == 0,
             )
             .distinct(Index.id)
@@ -189,7 +192,7 @@ class IndexSchema(ma.SQLAlchemyAutoSchema):
             "language_id",
             "frequently_used_count",
             "date",
-            "user_id",
+            "username",
             "index_id",
             "definition",
             "origin",

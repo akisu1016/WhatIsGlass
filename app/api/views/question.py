@@ -1,5 +1,8 @@
 from flask import Blueprint, request, make_response, jsonify, session, abort
-from api.models import Index, IndexSchema, Answer, AnswerSchema
+from api.models import User
+from api.models import Index, IndexSchema
+from flask_jwt_extended import jwt_required, current_user
+from ..token import jwt
 import json
 
 # ルーティング設定
@@ -13,41 +16,68 @@ def error_handler(err):
 
 
 @question_router.route("/question", methods=["GET"])
+@jwt_required(optional=True)
 def getIndexList():
 
     try:
         contents = request.args
+
+        # リクエストの初期値
         request_dict = {
-            "sort": contents.get("sort"),
-            "language_id": contents.get("language_id"),
-            "include_no_answer": contents.get("include_no_answer"),
-            "keyword": contents.get("keyword"),
-            "index_limit": contents.get("index_limit"),
+            "sort": 1,
+            "include_no_answer": 1,
+            "keyword": "",
+            "index_limit": 100,
         }
+
+        if contents.get("sort") is not None and contents.get("sort") != "":
+            request_dict["sort"] = contents.get("sort")
+
+        if (
+            contents.get("include_no_answer") is not None
+            and contents.get("include_no_answer") != ""
+        ):
+            request_dict["include_no_answer"] = contents.get("include_no_answer")
+
+        if (
+            contents.get("index_limit") is not None
+            and contents.get("index_limit") != ""
+        ):
+            request_dict["index_limit"] = contents.get("index_limit")
+
+        if (
+            contents.get("language_id") is not None
+            and contents.get("language_id") != ""
+        ):
+            request_dict["language_id"] = contents.get("language_id")
+        else:
+            abort(400, {"message": "language_id is required"})
+
         indices = Index.getIndexList(request_dict)
         index_schema = IndexSchema(many=True)
     except ValueError:
-        print(ValueError)
+        abort(400, {"message": ValueError})
 
     return make_response(jsonify({"code": 200, "indices": index_schema.dump(indices)}))
 
 
 @question_router.route("/question", methods=["POST"])
+@jwt_required()
 def registIndex():
 
     # jsonデータを取得する
     jsonData = json.dumps(request.json)
     indexData = json.loads(jsonData)
 
-    if not "questioner" in indexData:
-        abort(401, {"message": "questioner is a required!!"})
-
-    # TODO : JsonDataにquestionerのIDを追加する
+    if current_user is not None:
+        indexData["questioner"] = current_user.id
+    else:
+        abort(400, {"message": "questioner is a required!!"})
 
     try:
         index = Index.registIndex(indexData)
         index_schema = IndexSchema(many=True)
     except ValueError:
-        print(ValueError)
+        abort(400, {"message": ValueError})
 
     return make_response(jsonify({"code": 201, "index": index_schema.dump(index)}))
