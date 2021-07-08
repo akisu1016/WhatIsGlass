@@ -23,7 +23,7 @@ def getExampleAnswerList():
         example_answers = ExampleAnswer.getExampleAnswerList(request_dict)
         example_answer_schema = ExampleAnswerSchema(many=True)
     except ValueError:
-        print(ValueError)
+        abort(400, {"message": "value is invalid"})
 
     return make_response(
         jsonify({"code": 200, "example": example_answer_schema.dump(example_answers)})

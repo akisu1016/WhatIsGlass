@@ -1,5 +1,5 @@
-import re
 from api.database import db, ma
+from sqlalchemy import create_engine, text
 import datetime
 
 
@@ -16,17 +16,48 @@ class Answer(db.Model):
     date = db.Column(db.TIMESTAMP, nullable=True)
 
     def __repr__(self):
-        return "<Answer %r>" % self.name
+        return "<Answer %r>" % self.id
 
-    def getAnswerList():
+    def getAnswerList(request_index_id):
 
         # select * from users
-        answer_list = db.session.query(Answer).all()
+        answer_list = (
+            db.session.query(Answer)
+            .filter(request_index_id["index_id"] == Answer.index_id)
+            .all()
+        )
 
-        if answer_list == None:
+        if answer_list is None:
             return []
         else:
             return answer_list
+
+    def registAnswer(answer):
+
+        # answerの登録処理
+        record = Answer(
+            id=0,
+            user_id=1,
+            index_id=answer["index_id"],
+            definition=answer["definition"],
+            origin=answer["origin"],
+            note=answer["note"],
+            informative_count=0,
+            date=datetime.datetime.now(),
+        )
+
+        # insert into answers(id, user_id, informative_count...) values(...)
+        db.session.add(record)
+        db.session.flush()
+        db.session.commit()
+
+        response = db.session.execute(
+            "SELECT * from answers WHERE id = last_insert_id();"
+        )
+
+        print(response)
+
+        return response
 
 
 class AnswerSchema(ma.SQLAlchemyAutoSchema):
