@@ -7,6 +7,7 @@ from sqlalchemy.dialects import mysql
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.wrappers import response
 from flask_jwt_extended import create_access_token, set_access_cookies
+from email_validator import validate_email, EmailNotValidError
 from api.database import db, ma
 
 
@@ -79,6 +80,28 @@ class User(db.Model):
             }
 
             return login_user
+
+    def editUser(request_dict):
+
+        id = request_dict["user_id"]
+        username = request_dict["username"]
+        email = request_dict["email"]
+
+        # ユーザーが存在するか確認
+        user = db.session.query(User).filter(User.id == id).first()
+
+        if user is None:
+            return abort(400, {"message": "Invalid request"})
+
+        # ユーザー情報のアップデート
+        user.username = username if username != "" else user.username
+        user.email = email if email != "" else user.email
+
+        db.session.commit()
+
+        update_user = {"username": user.username, "email": user.email}
+
+        return update_user
 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
