@@ -69,10 +69,19 @@ def registIndex():
     jsonData = json.dumps(request.json)
     indexData = json.loads(jsonData)
 
+    if (
+        indexData is None
+        or not "index" in indexData
+        or not "language_id" in indexData
+        or indexData["index"] == ""
+        or indexData["language_id"] == ""
+    ):
+        abort(400, {"message": "parameter is a required"})
+
     if current_user is not None:
         indexData["questioner"] = current_user.id
     else:
-        abort(400, {"message": "questioner is a required!!"})
+        abort(400, {"message": "Login required"})
 
     try:
         index = Index.registIndex(indexData)
