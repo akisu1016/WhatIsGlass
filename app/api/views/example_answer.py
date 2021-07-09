@@ -15,11 +15,14 @@ def error_handler(err):
 @example_answer_router.route("/example", methods=["GET"])
 def getExampleAnswerList():
 
+    contents = request.args
+
+    if contents.get("index_id") is not None and contents.get("index_id") != "":
+        request_dict = {"index_id": contents.get("index_id")}
+    else:
+        abort(400, {"message": "index_id is required"})
+
     try:
-        contents = request.args
-        request_dict = {
-            "index_id": contents.get("index_id"),
-        }
         example_answers = ExampleAnswer.getExampleAnswerList(request_dict)
         example_answer_schema = ExampleAnswerSchema(many=True)
     except ValueError:
