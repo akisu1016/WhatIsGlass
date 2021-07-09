@@ -90,3 +90,53 @@ def registIndex():
         abort(400, {"message": ValueError})
 
     return make_response(jsonify({"code": 201, "index": index_schema.dump(index)}))
+
+
+@question_router.route("user/question-list", methods=["GET"])
+@jwt_required()
+def getUserIndexList():
+
+    try:
+        contents = request.args
+
+        # リクエストの初期値
+        request_dict = {
+            "sort": 1,
+            "include_no_answer": 1,
+            "index_limit": 100,
+        }
+
+        if current_user is not None:
+            request_dict["user_id"] = current_user.id
+        else:
+            abort(400, {"message": "Login required"})
+
+        if contents.get("sort") is not None and contents.get("sort") != "":
+            request_dict["sort"] = contents.get("sort")
+
+        if (
+            contents.get("include_no_answer") is not None
+            and contents.get("include_no_answer") != ""
+        ):
+            request_dict["include_no_answer"] = contents.get("include_no_answer")
+
+        if (
+            contents.get("index_limit") is not None
+            and contents.get("index_limit") != ""
+        ):
+            request_dict["index_limit"] = contents.get("index_limit")
+
+        if (
+            contents.get("language_id") is not None
+            and contents.get("language_id") != ""
+        ):
+            request_dict["language_id"] = contents.get("language_id")
+        else:
+            abort(400, {"message": "language_id is required"})
+
+        indices = Index.getUserIndexList(request_dict)
+        index_schema = IndexSchema(many=True)
+    except ValueError:
+        abort(400, {"message": ValueError})
+
+    return make_response(jsonify({"code": 200, "indices": index_schema.dump(indices)}))
