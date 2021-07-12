@@ -1,20 +1,20 @@
 version: '3'
 services:
-  whatisglass_api:
+  whatisgrass_api:
     restart: always
     build: .
-    image: whatisglass-api
-    container_name: 'whatisglass-api'
+    image: whatisgrass-api
+    container_name: 'whatisgrass-api'
     working_dir: '/app'
     ports:
     - 8080:8080
     links:
-      - whatisglass_mysql
+      - whatisgrass_mysql
     tty: true
     volumes:
       - ./app:/app
-  whatisglass_mysql:
-    container_name: whatisglass-mysql
+  whatisgrass_mysql:
+    container_name: whatisgrass-mysql
     image: mysql:8.0
     ports:
     - 3306:3306
@@ -24,12 +24,12 @@ services:
     - ./mysql/db/my.cnf/my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: whatisglass
-      MYSQL_USER: glass
-      MYSQL_PASSWORD: glass
+      MYSQL_DATABASE: whatisgrass
+      MYSQL_USER: grass
+      MYSQL_PASSWORD: grass
       TZ: "Asia/Tokyo"
-  whatisglass_redis:
-    container_name: whatisglass-redis
+  whatisgrass_redis:
+    container_name: whatisgrass-redis
     image: "redis:latest"
     ports:
       - "6379:6379"

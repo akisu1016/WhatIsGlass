@@ -9,7 +9,7 @@ what はくさ。
 ## 始め方
 
 ```
-$ git clone https://github.com/akisu1016/WhatIsGlass.git
+$ git clone https://github.com/akisu1016/WhatIsGrass.git
 ```
 Docker使っているのでインストールして欲しい 以下brew
 
@@ -27,7 +27,7 @@ $ docker-compose up -d
 コンテナ起動後コンテナに入りサーバーを立ち上げる
 ```
 # コンテナに入る
-$ docker exec -it whatisglass-api bash
+$ docker exec -it whatisgrass-api bash
 
 # サーバーを起動
 root@61a05da8539e:/app# python app.py 
