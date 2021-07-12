@@ -1,7 +1,7 @@
 -- テーブルの初期化 --
-DROP DATABASE IF EXISTS WhatIsGlass;
-CREATE DATABASE WhatIsGlass;
-USE WhatIsGlass;
+DROP DATABASE IF EXISTS WhatIsGrass;
+CREATE DATABASE WhatIsGrass;
+USE WhatIsGrass;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS languages;
 DROP TABLE IF EXISTS users_languages;
