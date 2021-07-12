@@ -21,14 +21,17 @@ def error_handler(err):
 
 @answer_router.route("/answer", methods=["GET"])
 def getAnswerList():
+
+    contents = request.args
+
+    if contents.get("index_id") is not None and contents.get("index_id") != "":
+        request_dict = {"index_id": contents.get("index_id")}
+    else:
+        abort(400, {"message": "index_id is required"})
+
     try:
-        contents = request.args
-        request_dict = {
-            "index_id": contents.get("index_id"),
-        }
         answers = Answer.getAnswerList(request_dict)
         answer_schema = AnswerSchema(many=True)
-
     except ValueError:
         print(ValueError)
 
@@ -42,10 +45,14 @@ def registAnswer():
     jsonData = json.dumps(request.json)
     answerData = json.loads(jsonData)
 
-    if "answerer" not in answerData:
-        abort(401, {"message": "answerer is a required!!"})
-    elif "index_id" not in answerData:
-        abort(400, {"message": "index is not exit"})
+    if (
+        answerData is None
+        or "index_id" not in answerData
+        or "definition" not in answerData
+        or answerData["index_id"] == ""
+        or answerData["definition"] == ""
+    ):
+        abort(400, {"message": "parameter is a required"})
 
     try:
         answer = Answer.registAnswer(answerData)
