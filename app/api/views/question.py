@@ -1,6 +1,12 @@
+from os import kill
 from flask import Blueprint, request, make_response, jsonify, session, abort
 from api.models import User
-from api.models import Index, IndexSchema
+from api.models import (
+    Index,
+    IndexSchema,
+    IndexCategoryTag,
+    IndexCategorytagSchema,
+)
 from flask_jwt_extended import jwt_required, current_user
 from ..token import jwt
 import json
@@ -55,10 +61,26 @@ def getIndexList():
 
         indices = Index.getIndexList(request_dict)
         index_schema = IndexSchema(many=True)
+        indices_list = index_schema.dump(indices)
+        categorytag_schema = IndexCategorytagSchema(many=True)
+        indices_categorytag_list = []
+
+        for indices_dict in indices_list:
+            categorytags = IndexCategoryTag.getCategoryTagList(indices_dict)
+            categorytags_list = categorytag_schema.dump(categorytags)
+            indices_dict["categorytags"] = {}
+            for categorytags_dict in categorytags_list:
+                if indices_dict["id"] == categorytags_dict["index_id"]:
+                    indices_dict["categorytags"][
+                        categorytags_dict["category_tag_id"]
+                    ] = categorytags_dict["category_name"]
+
+            indices_categorytag_list.append(indices_dict)
+
     except ValueError:
         abort(400, {"message": ValueError})
 
-    return make_response(jsonify({"code": 200, "indices": index_schema.dump(indices)}))
+    return make_response(jsonify({"code": 200, "indices": indices_categorytag_list}))
 
 
 @question_router.route("/question", methods=["POST"])
