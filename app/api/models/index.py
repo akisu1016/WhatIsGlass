@@ -3,7 +3,9 @@ from api.database import db, ma
 from sqlalchemy import *
 from .answer import Answer
 from .user import User
+from .categorytag import IndexCategoryTag
 import datetime
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects import mysql
 
 
@@ -341,4 +343,5 @@ class IndexSchema(ma.SQLAlchemyAutoSchema):
             "informative_count",
             "best_answer",
             "answer_count",
+            "categorytags",
         )
