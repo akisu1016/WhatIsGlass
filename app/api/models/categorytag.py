@@ -6,16 +6,6 @@ from sqlalchemy import *
 from .index import Index
 
 
-# base = declarative_base()
-
-# index_caregorytag_map_table = db.Table(
-#     "index_caregorytag_map",
-#     base.metadata,
-#     db.Column("indices_id", db.Integer, db.ForeignKey("indices.id")),
-#     db.Column("categorytags_id", db.Integer, db.ForeignKey("categorytags.id")),
-# )
-
-
 class CategoryTag(db.Model):
     __tablename__ = "categorytags"
 
@@ -24,6 +14,21 @@ class CategoryTag(db.Model):
 
     def __repr__(self):
         return "<categorytags %r>" % self.name
+
+    def getCategoryTagList():
+
+        category_tag_list = (
+            db.session.query(
+                CategoryTag.id, CategoryTag.name.label("category_tag_name")
+            )
+            .order_by(asc(CategoryTag.id))
+            .all()
+        )
+
+        if category_tag_list is None:
+            return []
+        else:
+            return category_tag_list
 
 
 class IndexCategoryTag(db.Model):
@@ -34,9 +39,10 @@ class IndexCategoryTag(db.Model):
         db.Integer, db.ForeignKey("categorytags.id"), primary_key=True
     )
 
+    def __repr__(self):
+        return "<indices_categorytags %r>" % self.index_id
+
     def getCategoryTagList(index):
-        def __repr__(self):
-            return "<indices_categorytags %r>" % self.index_id
 
         index_id = index["id"]
 
@@ -66,7 +72,7 @@ class CategorytagSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = CategoryTag
         load_instance = True
-        fields = ("id", "name")
+        fields = ("id", "category_tag_name")
 
 
 class IndexCategorytagSchema(ma.SQLAlchemyAutoSchema):
