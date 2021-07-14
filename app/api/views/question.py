@@ -1,4 +1,3 @@
-from app.api.models import index
 from os import kill
 from flask import Blueprint, request, make_response, jsonify, session, abort
 from api.models import User
