@@ -1,5 +1,12 @@
 from flask import Blueprint, request, make_response, jsonify, abort
-from api.models import User, UserSchema
+from api.models import (
+    User,
+    UserSchema,
+    Language,
+    UserLanguage,
+    LanguageSchema,
+    UserLanguageSchema,
+)
 from flask_jwt_extended import jwt_required, unset_jwt_cookies, get_jwt, current_user
 from email_validator import validate_email, EmailNotValidError
 from ..token import jwt, Redis
@@ -48,9 +55,11 @@ def postUserSignup():
         not "username" in userData
         or not "email" in userData
         or not "password" in userData
+        or not "languages" in userData
         or userData["username"] == ""
         or userData["email"] == ""
         or userData["password"] == ""
+        or userData["languages"] == ""
     ):
         abort(400, {"message": "parameter is a required"})
 
@@ -64,10 +73,13 @@ def postUserSignup():
     try:
         user = User.registUser(userData)
         user_schema = UserSchema(many=True)
+        user_list = user_schema.dump(user)
     except ValueError:
-        abort(400, {"message": ValueError})
+        abort(400, {"message": "sigunup failed"})
 
-    return make_response(jsonify({"code": 201, "users": user_schema.dump(user)}))
+    return make_response(
+        jsonify({"code": 201, "user": merge_user_languages(user_list)})
+    )
 
 
 @user_router.route("/login", methods=["POST"])
@@ -94,16 +106,12 @@ def postUserLogin():
     try:
         loginuser = User.loginUser(userData)
         login_user_schema = UserSchema(many=True)
+        loginuser_list = login_user_schema.dump([loginuser])
     except ValueError:
-        abort(400, {"message": ValueError})
+        abort(400, {"message": "login failed"})
 
     return make_response(
-        jsonify(
-            {
-                "code": 201,
-                "login_user": login_user_schema.dump([loginuser]),
-            }
-        )
+        jsonify({"code": 201, "login_user": merge_user_languages(loginuser_list)})
     )
 
 
@@ -128,14 +136,17 @@ def postUserEdit():
         userData is None
         or not "email" in userData
         and not "username" in userData
+        and not "languages" in userData
         or userData["email"] == ""
         and userData["username"] == ""
+        and userData["languages"] == ""
     ):
         abort(400, {"message": "parameter is a required"})
 
     userData["user_id"] = current_user.id
     userData["username"] = "" if not "username" in userData else userData["username"]
     userData["email"] = "" if not "email" in userData else userData["email"]
+    userData["languages"] = "" if not "languages" in userData else userData["languages"]
 
     ## emailのバリデーション
     try:
@@ -146,26 +157,51 @@ def postUserEdit():
 
     try:
         user = User.editUser(userData)
-        user_schema = UserSchema(many=True)
-        print(user)
     except ValueError:
-        abort(400, {"message": ValueError})
+        abort(400, {"message": "edit failed"})
 
-    return make_response(jsonify({"code": 201, "users": user_schema.dump([user])}))
+    return make_response(jsonify({"code": 201, "user": merge_user_languages([user])}))
 
 
 @user_router.route("/whoami", methods=["GET"])
 @jwt_required()
 def getLoginUser():
-    return make_response(
-        jsonify(
+
+    user = {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+    }
+    user["languages"] = []
+    UserLanguageList = UserLanguage.getUserLanguageList(user)
+    for UserLanguageDict in UserLanguageList:
+        user["languages"].append(
             {
-                "code": 201,
-                "users": {
-                    "id": current_user.id,
-                    "username": current_user.username,
-                    "email": current_user.email,
-                },
+                "id": UserLanguageDict["language_id"],
+                "language": UserLanguageDict["language"],
             }
         )
-    )
+    return make_response(jsonify({"code": 201, "user": user}))
+
+
+##ユーザーのリストと言語リストをマージする
+def merge_user_languages(user_list):
+
+    user_languages_list = []
+    user_language_schema = UserLanguageSchema(many=True)
+
+    for user_dict in user_list:
+        languages = UserLanguage.getUserLanguageList(user_dict)
+        languages_list = user_language_schema.dump(languages)
+        user_dict["languages"] = []
+        for languages_dict in languages_list:
+            if user_dict["id"] == languages_dict["user_id"]:
+                user_dict["languages"].append(
+                    {
+                        "id": languages_dict["language_id"],
+                        "language": languages_dict["language"],
+                    }
+                )
+        user_languages_list.append(user_dict)
+
+    return user_languages_list

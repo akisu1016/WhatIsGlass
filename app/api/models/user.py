@@ -1,6 +1,7 @@
 import re
 import base64
 import os
+from .language import UserLanguage
 from flask import abort, jsonify
 from sqlalchemy.sql.functions import user
 from sqlalchemy.dialects import mysql
@@ -9,10 +10,6 @@ from werkzeug.wrappers import response
 from flask_jwt_extended import create_access_token, set_access_cookies
 from email_validator import validate_email, EmailNotValidError
 from api.database import db, ma
-
-
-##一応saltも作ってお
-salt = base64.b64encode(os.urandom(32))
 
 
 class User(db.Model):
@@ -47,13 +44,28 @@ class User(db.Model):
 
         db.session.add(record)
         db.session.flush()
+
+        user = db.session.execute("SELECT * from users WHERE id = last_insert_id();")
+
+        for get_user_id in user:
+            user_id = get_user_id.id
+
+        # ユーザー言語の登録
+        for language in request_dict["languages"]:
+            record = UserLanguage(user_id=user_id, language_id=int(language))
+            db.session.add(record)
+
+        db.session.flush()
         db.session.commit()
 
         response = db.session.execute(
             "SELECT * from users WHERE id = last_insert_id();"
         )
 
-        return response
+        if response is None:
+            return []
+        else:
+            return response
 
     def loginUser(request_dict):
         email = request_dict["email"]
@@ -97,9 +109,20 @@ class User(db.Model):
         user.username = username if username != "" else user.username
         user.email = email if email != "" else user.email
 
+        if request_dict["languages"] != "":
+            # ユーザー言語のアップデート
+            db.session.query(UserLanguage).filter(User.id == user.id).delete(
+                synchronize_session="fetch"
+            )
+
+            for language in request_dict["languages"]:
+                record = UserLanguage(user_id=id, language_id=language)
+                db.session.add(record)
+
+        db.session.flush()
         db.session.commit()
 
-        update_user = {"username": user.username, "email": user.email}
+        update_user = {"id": user.id, "username": user.username, "email": user.email}
 
         return update_user
 
@@ -108,4 +131,12 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
         load_instance = True
-        fields = ("id", "username", "email", "password", "icon", "access_token")
+        fields = (
+            "id",
+            "username",
+            "email",
+            "password",
+            "icon",
+            "languages",
+            "access_token",
+        )
