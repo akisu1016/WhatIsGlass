@@ -22,6 +22,7 @@ def error_handler(err):
     return res, err.code
 
 
+# 見出し一覧API
 @question_router.route("/question", methods=["GET"])
 @jwt_required(optional=True)
 def getIndexList():
@@ -65,13 +66,37 @@ def getIndexList():
         indices_list = index_schema.dump(indices)
 
     except ValueError:
-        abort(400, {"message": ValueError})
+        abort(400, {"message": "get failed"})
 
     return make_response(
         jsonify({"code": 200, "indices": merge_indices_categorytags(indices_list)})
     )
 
 
+# 見出し取得API
+@question_router.route("/specific-question", methods=["GET"])
+@jwt_required(optional=True)
+def getIndex():
+
+    try:
+        contents = request.args
+
+        if contents.get("index_id") is None or contents.get("index_id") == "":
+            abort(400, {"message": "index_id is required"})
+
+        indices = Index.getIndex(contents.get("index_id"))
+        index_schema = IndexSchema(many=True)
+        indices_list = index_schema.dump(indices)
+
+    except ValueError:
+        abort(400, {"message": "get failed"})
+
+    return make_response(
+        jsonify({"code": 200, "indices": merge_indices_categorytags(indices_list)})
+    )
+
+
+# 質問投稿API
 @question_router.route("/question", methods=["POST"])
 @jwt_required()
 def registIndex():
@@ -98,11 +123,12 @@ def registIndex():
         index = Index.registIndex(indexData)
         index_schema = IndexSchema(many=True)
     except ValueError:
-        abort(400, {"message": ValueError})
+        abort(400, {"message": "post failed"})
 
     return make_response(jsonify({"code": 201, "index": index_schema.dump(index)}))
 
 
+# ユーザー見出し一覧API
 @question_router.route("user/question-list", methods=["GET"])
 @jwt_required()
 def getUserIndexList():
@@ -150,7 +176,7 @@ def getUserIndexList():
         index_list = index_schema.dump(indices)
 
     except ValueError:
-        abort(400, {"message": ValueError})
+        abort(400, {"message": "get failed"})
 
     return make_response(
         jsonify({"code": 200, "indices": merge_indices_categorytags(index_list)})

@@ -162,6 +162,67 @@ class Index(db.Model):
         else:
             return index_list
 
+    def getIndex(index_id):
+
+        # 回答者数を取得するためのクエリ
+        answer_count = (
+            db.session.query(
+                Index.id.label("index_id"),
+                func.count(Answer.index_id).label("answer_count"),
+            )
+            .outerjoin(Answer, Index.id == Answer.index_id)
+            .group_by(Index.id)
+            .subquery("answer_count")
+        )
+
+        # ベストアンサーを一覧取得するためのクエリ
+        max_informative = (
+            db.session.query(
+                Answer.index_id, func.max(Answer.informative_count).label("max_count")
+            )
+            .group_by(Answer.index_id)
+            .subquery("max_informative")
+        )
+
+        best_answer = (
+            db.session.query(
+                Answer.index_id, func.any_value(Answer.definition).label("best_answer")
+            )
+            .join(
+                max_informative,
+                Answer.index_id == max_informative.c.index_id,
+            )
+            .filter(Answer.informative_count == max_informative.c.max_count)
+            .group_by(Answer.index_id)
+            .having(func.max(Answer.date))
+            .subquery("best_answer")
+        )
+
+        index = (
+            db.session.query(
+                Index.id,
+                Index.index,
+                User.username,
+                Index.frequently_used_count,
+                Index.language_id,
+                Index.date,
+                answer_count.c.answer_count.label("answer_count"),
+                best_answer.c.best_answer,
+            )
+            .outerjoin(best_answer, Index.id == best_answer.c.index_id)
+            .filter(
+                User.id == Index.questioner,
+                Index.id == answer_count.c.index_id,
+                Index.id == index_id,
+            )
+            .all()
+        )
+
+        if index == null:
+            return []
+        else:
+            return index
+
     def getUserIndexList(request_dict):
         # リクエストから取得
         sort = int(request_dict["sort"]) if request_dict["sort"] is not None else 1
