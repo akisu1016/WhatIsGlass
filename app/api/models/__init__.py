@@ -8,5 +8,5 @@ from .categorytag import (
     IndexCategoryTag,
     IndexCategorytagSchema,
 )
-
-# from .example_answer import ExampleAnswer, ExampleAnswerSchema
+from .example_answer import ExampleAnswer, ExampleAnswerSchema
+from .language import Language, UserLanguage, LanguageSchema, UserLanguageSchema
