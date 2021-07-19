@@ -5,7 +5,6 @@ from api.models import (
     Index,
     IndexSchema,
     IndexCategoryTag,
-    CategorytagSchema,
     IndexCategorytagSchema,
 )
 from flask_jwt_extended import jwt_required, current_user
@@ -190,6 +189,45 @@ def getUserIndexList():
 
     return make_response(
         jsonify({"code": 200, "indices": merge_indices_categorytags(index_list)})
+    )
+
+
+# 要回答見出し取得API
+@question_router.route("/unpopular_question", methods=["GET"])
+@jwt_required(optional=True)
+def getUnpopularIndexList():
+
+    try:
+        contents = request.args
+
+        # リクエストの初期値
+        request_dict = {
+            "index_limit": 3,
+        }
+
+        if (
+            contents.get("index_limit") is not None
+            and contents.get("index_limit") != ""
+        ):
+            request_dict["index_limit"] = contents.get("index_limit")
+
+        if (
+            contents.get("language_ids") is not None
+            and contents.get("language_ids") != ""
+        ):
+            request_dict["language_ids"] = contents.get("language_ids")
+        else:
+            abort(400, {"message": "language_ids is required"})
+
+        indices = Index.get_unpopular_question(request_dict)
+        index_schema = IndexSchema(many=True)
+        indices_list = index_schema.dump(indices)
+
+    except ValueError:
+        abort(400, {"message": "get failed"})
+
+    return make_response(
+        jsonify({"code": 200, "indices": merge_indices_categorytags(indices_list)})
     )
 
 
