@@ -311,28 +311,8 @@ class Index(db.Model):
                     )
                     .subquery("filter_index_id")
                 )
+
         return filter_index_id
-
-        # for category_tag_id in category_tag_id_list:
-        #     if len(filter_index_id) == 0:
-        #         filter_index_id.append(
-        #             db.session.query(IndexCategoryTag.index_id)
-        #             .filter(
-        #                 IndexCategoryTag.category_tag_id == category_tag_id,
-        #             )
-        #             .all()
-        #         )
-        #     else:
-        #         filter_index_id.append(
-        #             db.session.query(IndexCategoryTag.index_id)
-        #             .filter(
-        #                 filter_index_id.index_id == IndexCategoryTag.index_id,
-        #                 IndexCategoryTag.category_tag_id == category_tag_id,
-        #             )
-        #             .all()
-        #         )
-
-        # print(filter_index_id)
 
 
 class IndexSchema(ma.SQLAlchemyAutoSchema):
