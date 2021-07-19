@@ -35,6 +35,7 @@ def getIndexList():
             "sort": 1,
             "include_no_answer": 1,
             "keyword": "",
+            "category_tag_id": "",
             "index_limit": 100,
         }
 
@@ -46,6 +47,15 @@ def getIndexList():
             and contents.get("include_no_answer") != ""
         ):
             request_dict["include_no_answer"] = contents.get("include_no_answer")
+
+        if contents.get("keyword") is not None and contents.get("keyword") != "":
+            request_dict["keyword"] = contents.get("keyword")
+
+        if (
+            contents.get("category_tag_id") is not None
+            and contents.get("category_tag_id") != ""
+        ):
+            request_dict["category_tag_id"] = contents.get("category_tag_id")
 
         if (
             contents.get("index_limit") is not None
