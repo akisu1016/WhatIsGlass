@@ -203,6 +203,7 @@ def getUnpopularIndexList():
         # リクエストの初期値
         request_dict = {
             "index_limit": 3,
+            "is_random": 1,
         }
 
         if (
@@ -210,6 +211,9 @@ def getUnpopularIndexList():
             and contents.get("index_limit") != ""
         ):
             request_dict["index_limit"] = contents.get("index_limit")
+
+        if contents.get("is_random") is not None and contents.get("is_random") != "":
+            request_dict["is_random"] = contents.get("is_random")
 
         if (
             contents.get("language_ids") is not None
