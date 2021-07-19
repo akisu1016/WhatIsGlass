@@ -1,6 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify, abort
 from sqlalchemy.sql.expression import true
-from api.models import Answer, AnswerSchema, ExampleAnswer, ExampleAnswerSchema
+from api.models import Answer, AnswerSchema, ExampleAnswer
 import json
 
 # ルーティング設定
@@ -55,17 +55,11 @@ def registAnswer():
         abort(400, {"message": "parameter is a required"})
 
     try:
-        answer = Answer.registAnswer(answerData)
-        example = ExampleAnswer.registExampleAnswer(answerData)
-        example_answer_schema = ExampleAnswerSchema(many=True)
-        answer_schema = AnswerSchema(many=True)
+        answer_id = Answer.registAnswer(answerData)
+        ExampleAnswer.registExampleAnswer(answerData["example"], answer_id)
+        response_query = Answer.makeResponseAnswer(answer_id)
 
     except ValueError:
         abort(400, {"message": "value is invalid"})
 
-    return make_response(
-        jsonify(
-            {"code": 201, "answer": answer_schema.dump(answer)},
-            {"code": 201, "example": example_answer_schema.dump(example)},
-        )
-    )
+    return make_response(jsonify({"code": 201, "answer": response_query}))

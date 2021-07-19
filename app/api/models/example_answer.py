@@ -38,37 +38,24 @@ class ExampleAnswer(db.Model):
         else:
             return example_answer_list
 
-    def registExampleAnswer(answer):
-
-        answers_query = db.session.execute(
-            "SELECT * from answers WHERE id = last_insert_id();"
-        )
-
-        for get_answer_id in answers_query:
-            ExampleAnswer.last_answer_id = int(get_answer_id.id)
+    def registExampleAnswer(example_list, answer_id):
 
         # exampleの登録処理
 
-        if not answer["example"]:
-            return answer
+        if not example_list:
+            return example_list
         else:
-            for examplelist in answer["example"]:
+            for item in example_list:
 
                 record = ExampleAnswer(
-                    example_sentence=examplelist,
-                    answer_id=ExampleAnswer.last_answer_id,
+                    example_sentence=item,
+                    answer_id=answer_id,
                 )
 
                 db.session.add(record)
                 db.session.flush()
 
         db.session.commit()
-
-        response = db.session.execute(
-            "SELECT * from example_answer WHERE id = last_insert_id();"
-        )
-
-        return response
 
 
 class ExampleAnswerSchema(ma.SQLAlchemyAutoSchema):

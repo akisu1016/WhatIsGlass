@@ -1,6 +1,9 @@
+from re import S
+from werkzeug.wrappers import response
 from api.database import db, ma
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, sql, text
 import datetime
+import json
 
 
 class Answer(db.Model):
@@ -50,14 +53,32 @@ class Answer(db.Model):
         db.session.add(record)
         db.session.flush()
         db.session.commit()
-
-        response = db.session.execute(
+        answers_query = db.session.execute(
             "SELECT * from answers WHERE id = last_insert_id();"
         )
 
-        print(response)
+        for get_answer_id in answers_query:
+            return int(get_answer_id.id)
 
-        return response
+    def makeResponseAnswer(answer_id):
+
+        # answersとexampleのresponseの結合処理
+
+        answer_sql = "SELECT * FROM answers WHERE id = %d" % (answer_id)
+        answer_query = db.session.execute(answer_sql)
+        example_sql = "SELECT * FROM example_answer WHERE answer_id = %d" % (answer_id)
+        example_query = db.session.execute(example_sql)
+
+        answer_schema = AnswerSchema(many=True)
+
+        answer_json = answer_schema.dumps(answer_query)
+        answer_dict = json.loads(answer_json)
+        example_json = answer_schema.dumps(example_query)
+        example_dict = json.loads(example_json)
+
+        answer_dict[0]["example"] = example_dict
+
+        return answer_dict
 
 
 class AnswerSchema(ma.SQLAlchemyAutoSchema):
@@ -68,9 +89,12 @@ class AnswerSchema(ma.SQLAlchemyAutoSchema):
             "id",
             "user_id",
             "index_id",
+            "example_id",
             "definition",
             "origin",
             "note",
             "informative_count",
             "date",
+            "example_sentence",
+            "categorytags",
         )
