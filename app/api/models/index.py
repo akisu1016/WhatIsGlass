@@ -229,6 +229,8 @@ class Index(db.Model):
         else:
             return abort(400, {"message": "language_ids is required"})
 
+        is_random = request_dict["is_random"] if request_dict["is_random"] != "" else 1
+
         index_limit = (
             int(request_dict["index_limit"])
             if request_dict["index_limit"] is not ""
@@ -262,9 +264,13 @@ class Index(db.Model):
             answer_count.c.answer_count == 0,
         )
 
-        index_list = (
-            index_list.distinct(Index.id).order_by(func.rand()).limit(index_limit).all()
-        )
+        index_list = index_list.distinct(Index.id)
+
+        print(is_random)
+        if is_random == "2":
+            index_list = index_list.order_by(func.rand())
+
+        index_list = index_list.limit(index_limit).all()
 
         return index_list
 
