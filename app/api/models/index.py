@@ -4,6 +4,7 @@ from sqlalchemy import *
 from .answer import Answer
 from .user import User
 from .categorytag import IndexCategoryTag
+from .favorite_index import FavoriteIndex
 import datetime
 from flask import abort
 from sqlalchemy.orm import relationship
@@ -102,11 +103,6 @@ class Index(db.Model):
             .limit(index_limit)
         )
 
-        print(
-            index_list.statement.compile(
-                dialect=mysql.dialect(), compile_kwargs={"literal_binds": True}
-            )
-        )
         if index_list == null:
             return []
         else:
@@ -266,13 +262,74 @@ class Index(db.Model):
 
         index_list = index_list.distinct(Index.id)
 
-        print(is_random)
         if is_random == "2":
             index_list = index_list.order_by(func.rand())
 
         index_list = index_list.limit(index_limit).all()
 
         return index_list
+
+    def getFavotiteIndexList(request_dict):
+        # リクエストから取得
+        sort = int(request_dict["sort"]) if request_dict["sort"] is not None else 1
+        language_id = request_dict["language_id"]
+        index_limit = (
+            int(request_dict["index_limit"])
+            if request_dict["index_limit"] is not ""
+            else 300
+            if int(request_dict["index_limit"]) > 300
+            else 100
+        )
+        user_id = request_dict["user_id"]
+
+        # sortの条件を指定
+        sort_terms = (
+            "indices.date"
+            if sort == 1
+            else "indices.frequently_used_count, indices.date"
+            if sort == 2
+            else "indices.date, answer_count"
+            if sort == 3
+            else "indices.date"
+        )
+
+        answer_count = Index.get_answer_count()
+        best_answer = Index.get_best_answer()
+
+        index_list = db.session.query(
+            Index.id,
+            Index.index,
+            User.username,
+            Index.frequently_used_count,
+            Index.language_id,
+            Index.date,
+            answer_count.c.answer_count.label("answer_count"),
+            best_answer.c.best_answer,
+        )
+
+        index_list = index_list.outerjoin(
+            best_answer,
+            Index.id == best_answer.c.index_id,
+        )
+
+        index_list = index_list.filter(
+            Index.language_id == language_id,
+            User.id == Index.questioner,
+            Index.id == answer_count.c.index_id,
+            Index.id == FavoriteIndex.index_id,
+            FavoriteIndex.user_id == user_id,
+        )
+
+        index_list = (
+            index_list.distinct(Index.id)
+            .order_by(desc(text(f"{sort_terms}")))
+            .limit(index_limit)
+        )
+
+        if index_list == null:
+            return []
+        else:
+            return index_list
 
     def registIndex(indices):
         record = Index(
