@@ -10,3 +10,4 @@ from .categorytag import (
 )
 from .example_answer import ExampleAnswer, ExampleAnswerSchema
 from .language import Language, UserLanguage, LanguageSchema, UserLanguageSchema
+from .favorite_index import FavoriteIndex, FavoriteIndexSchema
