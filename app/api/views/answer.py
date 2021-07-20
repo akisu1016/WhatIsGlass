@@ -62,8 +62,6 @@ def getUserAnswerList():
         else:
             abort(400, {"message": "Login required"})
 
-        print(contents.get("sort"))
-
         if contents.get("sort") is not None and contents.get("sort") != "":
             request_dict["sort"] = contents.get("sort")
 

@@ -45,7 +45,6 @@ class Answer(db.Model):
         from .index import Index
 
         # リクエストから取得
-        print(request_dict["sort"])
         sort = int(request_dict["sort"]) if request_dict["sort"] is not None else 1
         language_id = request_dict["language_id"]
         user_id = request_dict["user_id"]
@@ -58,52 +57,34 @@ class Answer(db.Model):
             else 100
         )
 
-        if sort == 1:
-            answer_list = (
-                db.session.query(
-                    Answer.id,
-                    Answer.index_id,
-                    Answer.definition,
-                    Answer.origin,
-                    Answer.note,
-                    Answer.informative_count,
-                    Answer.date,
-                    User.username,
-                )
-                .filter(
-                    Answer.index_id == Index.id,
-                    User.id == user_id,
-                    Index.language_id == language_id,
-                )
-                .distinct(Answer.id)
-                .order_by(desc(text("answers.date")))
-                .limit(answer_limit)
-                .all()
+        answer_list = (
+            db.session.query(
+                Answer.id,
+                Answer.index_id,
+                Answer.definition,
+                Answer.origin,
+                Answer.note,
+                Answer.informative_count,
+                Answer.date,
+                User.username,
             )
-        else:
-            answer_list = (
-                db.session.query(
-                    Answer.id,
-                    Answer.index_id,
-                    Answer.definition,
-                    Answer.origin,
-                    Answer.note,
-                    Answer.informative_count,
-                    Answer.date,
-                    User.username,
-                )
-                .filter(
-                    Answer.index_id == Index.id,
-                    User.id == user_id,
-                    Index.language_id == language_id,
-                )
-                .distinct(Answer.id)
-                .order_by(text("answers.date"))
-                .limit(answer_limit)
-                .all()
+            .filter(
+                Answer.index_id == Index.id,
+                User.id == user_id,
+                Index.language_id == language_id,
             )
+            .distinct(Answer.id)
+        )
 
-        if answer_list == null:
+        if sort == 1:
+            answer_list = answer_list.order_by(desc(text("answers.date")))
+        else:
+            answer_list = answer_list.order_by(text("answers.date"))
+
+        answer_list = answer_list.limit(answer_limit)
+        answer_list = answer_list.all()
+
+        if answer_list == "":
             return []
         else:
             return answer_list
