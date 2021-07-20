@@ -1,6 +1,9 @@
 from flask import Blueprint, request, make_response, jsonify, abort
 from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.operators import exists
 from api.models import Answer, AnswerSchema, ExampleAnswer
+from flask_jwt_extended import jwt_required, current_user
+from ..token import jwt
 import json
 
 # ルーティング設定
@@ -20,6 +23,7 @@ def error_handler(err):
 
 
 @answer_router.route("/answer", methods=["GET"])
+@jwt_required()
 def getAnswerList():
 
     contents = request.args
@@ -38,7 +42,53 @@ def getAnswerList():
     return make_response(jsonify({"code": 200, "answers": answer_schema.dump(answers)}))
 
 
+@answer_router.route("/user/answer-list", methods=["GET"])
+@jwt_required()
+def getUserAnswerList():
+
+    contents = request.args
+    if contents is None:
+        abort(400, {"message": "parameter is a required"})
+
+    try:
+        # リクエストの初期値
+        request_dict = {
+            "sort": 1,
+            "answer_limit": 100,
+        }
+
+        if current_user is not None:
+            request_dict["user_id"] = current_user.id
+        else:
+            abort(400, {"message": "Login required"})
+
+        if contents.get("sort") is not None and contents.get("sort") != "":
+            request_dict["sort"] = contents.get("sort")
+
+        if (
+            contents.get("answer_limit") is not None
+            and contents.get("answer_limit") != ""
+        ):
+            request_dict["answer_limit"] = contents.get("answer_limit")
+
+        if (
+            contents.get("language_id") is not None
+            and contents.get("language_id") != ""
+        ):
+            request_dict["language_id"] = contents.get("language_id")
+        else:
+            abort(400, {"message": "language_id is required"})
+
+        answers = Answer.getUserAnswerList(request_dict)
+        answer_schema = AnswerSchema(many=True)
+    except ValueError:
+        abort(400, {"message": ValueError})
+
+    return make_response(jsonify({"code": 200, "answers": answer_schema.dump(answers)}))
+
+
 @answer_router.route("/answer", methods=["POST"])
+@jwt_required()
 def registAnswer():
 
     # jsonデータを取得する
