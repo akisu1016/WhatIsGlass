@@ -1,7 +1,12 @@
 from re import S
+import re
 from werkzeug.wrappers import response
+from sqlalchemy.sql.expression import outerjoin
+from sqlalchemy.orm import relationship
+from sqlalchemy.dialects import mysql
+from sqlalchemy import *
 from api.database import db, ma
-from sqlalchemy import create_engine, sql, text
+from .user import User
 import datetime
 import json
 
@@ -31,6 +36,74 @@ class Answer(db.Model):
         )
 
         if answer_list is None:
+            return []
+        else:
+            return answer_list
+
+    def getUserAnswerList(request_dict):
+
+        from .index import Index
+
+        # リクエストから取得
+        print(request_dict["sort"])
+        sort = int(request_dict["sort"]) if request_dict["sort"] is not None else 1
+        language_id = request_dict["language_id"]
+        user_id = request_dict["user_id"]
+
+        answer_limit = (
+            int(request_dict["answer_limit"])
+            if request_dict["answer_limit"] != ""
+            else 300
+            if int(request_dict["answer_limit"]) > 300
+            else 100
+        )
+
+        if sort == 1:
+            answer_list = (
+                db.session.query(
+                    Answer.id,
+                    Answer.index_id,
+                    Answer.definition,
+                    Answer.origin,
+                    Answer.note,
+                    Answer.informative_count,
+                    Answer.date,
+                    User.username,
+                )
+                .filter(
+                    Answer.index_id == Index.id,
+                    User.id == user_id,
+                    Index.language_id == language_id,
+                )
+                .distinct(Answer.id)
+                .order_by(desc(text("answers.date")))
+                .limit(answer_limit)
+                .all()
+            )
+        else:
+            answer_list = (
+                db.session.query(
+                    Answer.id,
+                    Answer.index_id,
+                    Answer.definition,
+                    Answer.origin,
+                    Answer.note,
+                    Answer.informative_count,
+                    Answer.date,
+                    User.username,
+                )
+                .filter(
+                    Answer.index_id == Index.id,
+                    User.id == user_id,
+                    Index.language_id == language_id,
+                )
+                .distinct(Answer.id)
+                .order_by(text("answers.date"))
+                .limit(answer_limit)
+                .all()
+            )
+
+        if answer_list == null:
             return []
         else:
             return answer_list
