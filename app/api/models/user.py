@@ -2,6 +2,7 @@ import re
 import base64
 import os
 from .language import UserLanguage
+from .community_tag import UserCommunityTag
 from flask import abort, jsonify
 from sqlalchemy.sql.functions import user
 from sqlalchemy.dialects import mysql
@@ -53,6 +54,13 @@ class User(db.Model):
         # ユーザー言語の登録
         for language in request_dict["languages"]:
             record = UserLanguage(user_id=user_id, language_id=int(language))
+            db.session.add(record)
+
+        # ユーザーコミュニティの登録
+        for community_tag in request_dict["community_tags"]:
+            record = UserCommunityTag(
+                user_id=user_id, community_tag_id=int(community_tag)
+            )
             db.session.add(record)
 
         db.session.flush()
@@ -126,6 +134,9 @@ class User(db.Model):
             for language in request_dict["languages"]:
                 record = UserLanguage(user_id=id, language_id=language)
                 db.session.add(record)
+
+        if request_dict["community_tags"] != "":
+            UserCommunityTag.editCommunityTag(request_dict)
 
         db.session.flush()
         db.session.commit()
