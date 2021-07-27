@@ -41,7 +41,8 @@ class Index(db.Model):
             else ""
         )
 
-        category_tag_filter = Index.get_category_tag_filter(category_tag_id_list)
+        if category_tag_id_list != "":
+            category_tag_filter = Index.get_category_tag_filter(category_tag_id_list)
 
         index_limit = (
             int(request_dict["index_limit"])
@@ -91,8 +92,10 @@ class Index(db.Model):
             Index.language_id == language_id,
             User.id == Index.questioner,
             Index.id == answer_count.c.index_id,
-            Index.id == category_tag_filter.c.index_id,
         )
+
+        if category_tag_id_list != "":
+            index_list = index_list.filter(Index.id == category_tag_filter.c.index_id)
 
         if include_no_answer == 3:
             index_list = index_list.filter(answer_count.c.answer_count == 0)
