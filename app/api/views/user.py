@@ -2,10 +2,10 @@ from flask import Blueprint, request, make_response, jsonify, abort
 from api.models import (
     User,
     UserSchema,
-    Language,
     UserLanguage,
-    LanguageSchema,
     UserLanguageSchema,
+    UserCommunityTag,
+    UserCommunityTagSchema,
 )
 from flask_jwt_extended import jwt_required, unset_jwt_cookies, get_jwt, current_user
 from email_validator import validate_email, EmailNotValidError
@@ -56,10 +56,12 @@ def postUserSignup():
         or not "email" in userData
         or not "password" in userData
         or not "languages" in userData
+        or not "community_tags" in userData
         or userData["username"] == ""
         or userData["email"] == ""
         or userData["password"] == ""
         or userData["languages"] == ""
+        or userData["community_tags"] == ""
     ):
         abort(400, {"message": "parameter is a required"})
 
@@ -77,9 +79,7 @@ def postUserSignup():
     except ValueError:
         abort(400, {"message": "sigunup failed"})
 
-    return make_response(
-        jsonify({"code": 201, "user": merge_user_languages(user_list)})
-    )
+    return make_response(jsonify({"code": 201, "user": merge_user_list(user_list)}))
 
 
 @user_router.route("/login", methods=["POST"])
@@ -111,7 +111,7 @@ def postUserLogin():
         abort(400, {"message": "login failed"})
 
     return make_response(
-        jsonify({"code": 201, "login_user": merge_user_languages(loginuser_list)})
+        jsonify({"code": 201, "login_user": merge_user_list(loginuser_list)})
     )
 
 
@@ -137,9 +137,11 @@ def postUserEdit():
         or not "email" in userData
         and not "username" in userData
         and not "languages" in userData
+        and not "community_tags" in userData
         or userData["email"] == ""
         and userData["username"] == ""
         and userData["languages"] == ""
+        and userData["community_tags"] == ""
     ):
         abort(400, {"message": "parameter is a required"})
 
@@ -147,6 +149,9 @@ def postUserEdit():
     userData["username"] = "" if not "username" in userData else userData["username"]
     userData["email"] = "" if not "email" in userData else userData["email"]
     userData["languages"] = "" if not "languages" in userData else userData["languages"]
+    userData["community_tags"] = (
+        "" if not "community_tags" in userData else userData["community_tags"]
+    )
 
     ## emailのバリデーション
     try:
@@ -160,7 +165,7 @@ def postUserEdit():
     except ValueError:
         abort(400, {"message": "edit failed"})
 
-    return make_response(jsonify({"code": 201, "user": merge_user_languages([user])}))
+    return make_response(jsonify({"code": 201, "user": merge_user_list([user])}))
 
 
 @user_router.route("/whoami", methods=["GET"])
@@ -173,7 +178,9 @@ def getLoginUser():
         "email": current_user.email,
     }
     user["languages"] = []
+    user["community_tags"] = []
     UserLanguageList = UserLanguage.getUserLanguageList(user)
+    UserCommunityTagList = UserCommunityTag.getCommunityTagList(user)
     for UserLanguageDict in UserLanguageList:
         user["languages"].append(
             {
@@ -181,19 +188,30 @@ def getLoginUser():
                 "language": UserLanguageDict["language"],
             }
         )
+    for UserCommunityTagDict in UserCommunityTagList:
+        user["community_tags"].append(
+            {
+                "id": UserCommunityTagDict["community_tag_id"],
+                "community": UserCommunityTagDict["community_tag_name"],
+            }
+        )
     return make_response(jsonify({"code": 201, "user": user}))
 
 
-##ユーザーのリストと言語リストをマージする
-def merge_user_languages(user_list):
+##ユーザーと言語,コミュニティをマージする
+def merge_user_list(user_list):
 
-    user_languages_list = []
+    merge_user_list = []
     user_language_schema = UserLanguageSchema(many=True)
+    user_community_tag_schema = UserCommunityTagSchema(many=True)
 
     for user_dict in user_list:
         languages = UserLanguage.getUserLanguageList(user_dict)
+        community_tags = UserCommunityTag.getCommunityTagList(user_dict)
         languages_list = user_language_schema.dump(languages)
+        community_tag_list = user_community_tag_schema.dump(community_tags)
         user_dict["languages"] = []
+        user_dict["community_tags"] = []
         for languages_dict in languages_list:
             if user_dict["id"] == languages_dict["user_id"]:
                 user_dict["languages"].append(
@@ -202,6 +220,16 @@ def merge_user_languages(user_list):
                         "language": languages_dict["language"],
                     }
                 )
-        user_languages_list.append(user_dict)
 
-    return user_languages_list
+        for community_tag_dict in community_tag_list:
+
+            if user_dict["id"] == community_tag_dict["user_id"]:
+                user_dict["community_tags"].append(
+                    {
+                        "id": community_tag_dict["community_tag_id"],
+                        "community": community_tag_dict["community_tag_name"],
+                    }
+                )
+        merge_user_list.append(user_dict)
+
+    return merge_user_list

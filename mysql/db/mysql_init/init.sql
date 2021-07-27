@@ -68,7 +68,7 @@ INSERT INTO communitytags VALUES
 (0, 'teenager'),
 (0, 'adult'),
 (0, 'noughty'),
-(0, '`middle age'),
+(0, 'middle age'),
 (0, 'elderly'),
 (0, 'enthusiast'),
 (0, 'athelete'),

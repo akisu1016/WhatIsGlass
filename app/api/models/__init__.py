@@ -8,6 +8,12 @@ from .categorytag import (
     IndexCategoryTag,
     IndexCategorytagSchema,
 )
+from .community_tag import (
+    CommunityTag,
+    UserCommunityTag,
+    CommunityTagSchema,
+    UserCommunityTagSchema,
+)
 from .example_answer import ExampleAnswer, ExampleAnswerSchema
 from .language import Language, UserLanguage, LanguageSchema, UserLanguageSchema
 from .favorite_index import FavoriteIndex, FavoriteIndexSchema
