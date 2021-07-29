@@ -29,5 +29,5 @@ def getExampleAnswerList():
         abort(400, {"message": "value is invalid"})
 
     return make_response(
-        jsonify({"code": 200, "example": example_answer_schema.dump(example_answers)})
+        jsonify({"code": 200, "examples": example_answer_schema.dump(example_answers)})
     )

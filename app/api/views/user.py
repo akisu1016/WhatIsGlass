@@ -111,7 +111,7 @@ def postUserLogin():
         abort(400, {"message": "login failed"})
 
     return make_response(
-        jsonify({"code": 201, "login_user": merge_user_list(loginuser_list)})
+        jsonify({"code": 201, "user": merge_user_list(loginuser_list)})
     )
 
 
