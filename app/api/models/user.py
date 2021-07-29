@@ -114,12 +114,15 @@ class User(db.Model):
             return abort(400, {"message": "Invalid request"})
 
         # Emailの存在確認
-        email_valid = (
-            db.session.query(User).filter(User.id != id, User.email == email).first()
-        )
+        if email != "":
+            email_valid = (
+                db.session.query(User)
+                .filter(User.id != id, User.email == email)
+                .first()
+            )
 
-        if email_valid is not None:
-            return abort(400, {"message": "email already exists"})
+            if email_valid is not None:
+                return abort(400, {"message": "email already exists"})
 
         # ユーザー情報のアップデート
         user.username = username if username != "" else user.username

@@ -189,7 +189,7 @@ def getUserIndexList():
         abort(400, {"message": "get failed"})
 
     return make_response(
-        jsonify({"code": 200, "indices": merge_indices_categorytags(index_list)})
+        jsonify({"code": 200, "indices": merge_indices_categorytags(index_list)[0]})
     )
 
 
@@ -264,7 +264,7 @@ def countupFrequently():
         abort(400, {"message": "count failed"})
 
     return make_response(
-        jsonify({"code": 201, "index": merge_indices_categorytags(index_list)})
+        jsonify({"code": 201, "indices": merge_indices_categorytags(index_list)})
     )
 
 
@@ -296,7 +296,7 @@ def countdownFrequently():
         abort(400, {"message": "count failed"})
 
     return make_response(
-        jsonify({"code": 201, "index": merge_indices_categorytags(index_list)})
+        jsonify({"code": 201, "indices": merge_indices_categorytags(index_list)})
     )
 
 

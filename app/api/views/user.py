@@ -132,6 +132,14 @@ def postUserEdit():
     jsonData = json.dumps(request.json)
     userData = json.loads(jsonData)
 
+    userData["user_id"] = current_user.id
+    userData["username"] = "" if not "username" in userData else userData["username"]
+    userData["email"] = "" if not "email" in userData else userData["email"]
+    userData["languages"] = "" if not "languages" in userData else userData["languages"]
+    userData["community_tags"] = (
+        "" if not "community_tags" in userData else userData["community_tags"]
+    )
+
     if (
         userData is None
         or not "email" in userData
@@ -145,20 +153,13 @@ def postUserEdit():
     ):
         abort(400, {"message": "parameter is a required"})
 
-    userData["user_id"] = current_user.id
-    userData["username"] = "" if not "username" in userData else userData["username"]
-    userData["email"] = "" if not "email" in userData else userData["email"]
-    userData["languages"] = "" if not "languages" in userData else userData["languages"]
-    userData["community_tags"] = (
-        "" if not "community_tags" in userData else userData["community_tags"]
-    )
-
     ## emailのバリデーション
-    try:
-        valid = validate_email(userData["email"])
-        userData["email"] = valid.email
-    except EmailNotValidError as e:
-        abort(400, {"message": "email is incorrect"})
+    if userData["email"] != "":
+        try:
+            valid = validate_email(userData["email"])
+            userData["email"] = valid.email
+        except EmailNotValidError as e:
+            abort(400, {"message": "email is incorrect"})
 
     try:
         user = User.editUser(userData)
@@ -232,4 +233,4 @@ def merge_user_list(user_list):
                 )
         merge_user_list.append(user_dict)
 
-    return merge_user_list
+    return merge_user_list[0]
