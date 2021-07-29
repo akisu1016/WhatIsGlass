@@ -17,7 +17,6 @@ class Index(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     index = db.Column(db.String(50), nullable=False)
     questioner = db.Column(db.Integer, nullable=False)
-    frequently_used_count = db.Column(db.Integer, nullable=False)
     language_id = db.Column(db.Integer, nullable=False)
     date = db.Column(db.TIMESTAMP, nullable=True)
 
@@ -52,30 +51,24 @@ class Index(db.Model):
             else 100
         )
 
-        # sortの条件を指定
-
-        sort_terms = (
-            "indices.date"
-            if sort == 1
-            else "indices.frequently_used_count, indices.date"
-            if sort == 2
-            else "indices.date, answer_count"
-            if sort == 3
-            else "indices.date"
-        )
-
         answer_count = Index.get_answer_count()
         best_answer = Index.get_best_answer()
+        frequently_used_count = IndexUserCommunityTag.countCommunityTag()
 
         index_list = db.session.query(
             Index.id,
             Index.index,
             User.username,
-            Index.frequently_used_count,
+            func.ifnull(frequently_used_count.c.frequently_used_count, 0).label(
+                "frequently_used_count"
+            ),
             Index.language_id,
             Index.date,
-            answer_count.c.answer_count.label("answer_count"),
+            answer_count.c.answer_count,
             best_answer.c.best_answer,
+        ).outerjoin(
+            frequently_used_count,
+            Index.id == frequently_used_count.c.index_id,
         )
 
         if include_no_answer == 2:
@@ -100,10 +93,13 @@ class Index(db.Model):
         if include_no_answer == 3:
             index_list = index_list.filter(answer_count.c.answer_count == 0)
 
+        if sort == 2:
+            index_list = index_list.order_by(desc(text("frequently_used_count")))
+        elif sort == 3:
+            index_list = index_list.order_by(desc(text("answer_count")))
+
         index_list = (
-            index_list.distinct(Index.id)
-            .order_by(desc(text(f"{sort_terms}")))
-            .limit(index_limit)
+            index_list.order_by(desc(Index.date)).distinct(Index.id).limit(index_limit)
         )
 
         if index_list == null:
@@ -115,23 +111,30 @@ class Index(db.Model):
 
         answer_count = Index.get_answer_count()
         best_answer = Index.get_best_answer()
+        frequently_used_count = IndexUserCommunityTag.countCommunityTag()
 
         index = (
             db.session.query(
                 Index.id,
                 Index.index,
                 User.username,
-                Index.frequently_used_count,
+                func.ifnull(frequently_used_count.c.frequently_used_count, 0).label(
+                    "frequently_used_count"
+                ),
                 Index.language_id,
                 Index.date,
-                answer_count.c.answer_count.label("answer_count"),
+                answer_count.c.answer_count,
                 best_answer.c.best_answer,
             )
             .outerjoin(best_answer, Index.id == best_answer.c.index_id)
+            .outerjoin(
+                frequently_used_count,
+                Index.id == frequently_used_count.c.index_id,
+            )
             .filter(
                 User.id == Index.questioner,
                 Index.id == answer_count.c.index_id,
-                Index.id == index_id,
+                Index.id == Index.id == index_id,
             )
             .all()
         )
@@ -160,29 +163,24 @@ class Index(db.Model):
             else 100
         )
 
-        # sortの条件を指定
-        sort_terms = (
-            "indices.date"
-            if sort == 1
-            else "indices.frequently_used_count, indices.date"
-            if sort == 2
-            else "indices.date, answer_count"
-            if sort == 3
-            else "indices.date"
-        )
-
         answer_count = Index.get_answer_count()
         best_answer = Index.get_best_answer()
+        frequently_used_count = IndexUserCommunityTag.countCommunityTag()
 
         index_list = db.session.query(
             Index.id,
             Index.index,
             User.username,
-            Index.frequently_used_count,
+            func.ifnull(frequently_used_count.c.frequently_used_count, 0).label(
+                "frequently_used_count"
+            ),
             Index.language_id,
             Index.date,
             answer_count.c.answer_count.label("answer_count"),
             best_answer.c.best_answer,
+        ).outerjoin(
+            frequently_used_count,
+            Index.id == frequently_used_count.c.index_id,
         )
 
         if include_no_answer == 2:
@@ -205,11 +203,13 @@ class Index(db.Model):
         if include_no_answer == 3:
             index_list = index_list.filter(answer_count.c.answer_count == 0)
 
+        if sort == 2:
+            index_list = index_list.order_by(desc(text("frequently_used_count")))
+        elif sort == 3:
+            index_list = index_list.order_by(desc(text("answer_count")))
+
         index_list = (
-            index_list.distinct(Index.id)
-            .order_by(desc(text(f"{sort_terms}")))
-            .limit(index_limit)
-            .all()
+            index_list.order_by(desc(Index.date)).distinct(Index.id).limit(index_limit)
         )
 
         if index_list == null:
@@ -240,16 +240,22 @@ class Index(db.Model):
 
         answer_count = Index.get_answer_count()
         best_answer = Index.get_best_answer()
+        frequently_used_count = IndexUserCommunityTag.countCommunityTag()
 
         index_list = db.session.query(
             Index.id,
             Index.index,
             User.username,
-            Index.frequently_used_count,
+            func.ifnull(frequently_used_count.c.frequently_used_count, 0).label(
+                "frequently_used_count"
+            ),
             Index.language_id,
             Index.date,
-            answer_count.c.answer_count.label("answer_count"),
+            answer_count.c.answer_count,
             best_answer.c.best_answer,
+        ).outerjoin(
+            frequently_used_count,
+            Index.id == frequently_used_count.c.index_id,
         )
 
         index_list = index_list.outerjoin(
@@ -285,29 +291,24 @@ class Index(db.Model):
         )
         user_id = request_dict["user_id"]
 
-        # sortの条件を指定
-        sort_terms = (
-            "indices.date"
-            if sort == 1
-            else "indices.frequently_used_count, indices.date"
-            if sort == 2
-            else "indices.date, answer_count"
-            if sort == 3
-            else "indices.date"
-        )
-
         answer_count = Index.get_answer_count()
         best_answer = Index.get_best_answer()
+        frequently_used_count = IndexUserCommunityTag.countCommunityTag()
 
         index_list = db.session.query(
             Index.id,
             Index.index,
             User.username,
-            Index.frequently_used_count,
+            func.ifnull(frequently_used_count.c.frequently_used_count, 0).label(
+                "frequently_used_count"
+            ),
             Index.language_id,
             Index.date,
-            answer_count.c.answer_count.label("answer_count"),
+            answer_count.c.answer_count,
             best_answer.c.best_answer,
+        ).outerjoin(
+            frequently_used_count,
+            Index.id == frequently_used_count.c.index_id,
         )
 
         index_list = index_list.outerjoin(
@@ -323,10 +324,13 @@ class Index(db.Model):
             FavoriteIndex.user_id == user_id,
         )
 
+        if sort == 2:
+            index_list = index_list.order_by(desc(text("frequently_used_count")))
+        elif sort == 3:
+            index_list = index_list.order_by(desc(text("answer_count")))
+
         index_list = (
-            index_list.distinct(Index.id)
-            .order_by(desc(text(f"{sort_terms}")))
-            .limit(index_limit)
+            index_list.order_by(desc(Index.date)).distinct(Index.id).limit(index_limit)
         )
 
         if index_list == null:
@@ -418,6 +422,91 @@ class Index(db.Model):
                 )
 
         return filter_index_id
+
+
+class IndexUserCommunityTag(db.Model):
+    __tablename__ = "indices_users_communitytags"
+
+    index_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    def __repr__(self):
+        return "<indices_users_communitytags %r>" % self.index_id, self.user_id
+
+    def countupCommunityTag(request):
+        index_id = request["index_id"]
+        user_id = request["user_id"]
+
+        # 存在確認
+        communitytag_exist = (
+            db.session.query(IndexUserCommunityTag)
+            .filter(
+                IndexUserCommunityTag.user_id == user_id,
+                IndexUserCommunityTag.index_id == index_id,
+            )
+            .first()
+        )
+
+        if communitytag_exist is not None:
+            return False
+
+        try:
+            record = IndexUserCommunityTag(user_id=user_id, index_id=index_id)
+            db.session.add(record)
+            db.session.flush()
+            db.session.commit()
+        except ValueError:
+            return False
+
+        index = Index.getIndex(index_id)
+
+        return index
+
+    def countdownCommunityTag(request):
+        index_id = request["index_id"]
+        user_id = request["user_id"]
+
+        # 存在確認
+        communitytag_exist = (
+            db.session.query(IndexUserCommunityTag)
+            .filter(
+                IndexUserCommunityTag.user_id == user_id,
+                IndexUserCommunityTag.index_id == index_id,
+            )
+            .first()
+        )
+
+        if communitytag_exist is None:
+            return False
+
+        try:
+            db.session.query(IndexUserCommunityTag).filter(
+                IndexUserCommunityTag.index_id == index_id,
+                IndexUserCommunityTag.user_id == user_id,
+            ).delete(synchronize_session="fetch")
+            db.session.flush()
+            db.session.commit()
+        except ValueError:
+            return
+
+        index = Index.getIndex(index_id)
+
+        return index
+
+    def countCommunityTag():
+
+        communitytag_count = (
+            db.session.query(
+                IndexUserCommunityTag.index_id,
+                func.count(IndexUserCommunityTag.index_id).label(
+                    "frequently_used_count"
+                ),
+            )
+            .group_by(IndexUserCommunityTag.index_id)
+            .subquery("frequently_used_count")
+        )
+
+        return communitytag_count
 
 
 class IndexSchema(ma.SQLAlchemyAutoSchema):

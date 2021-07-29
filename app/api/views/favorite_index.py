@@ -20,7 +20,7 @@ def error_handler(err):
     return res, err.code
 
 
-@favorite_index_router.route("/favorite_question", methods=["GET"])
+@favorite_index_router.route("/favorite-question", methods=["GET"])
 @jwt_required()
 def getFavoriteIndexList():
 
@@ -67,7 +67,7 @@ def getFavoriteIndexList():
     )
 
 
-@favorite_index_router.route("/favorite_question", methods=["POST"])
+@favorite_index_router.route("/favorite-question", methods=["POST"])
 @jwt_required()
 def registFavoriteIndex():
 
@@ -94,7 +94,7 @@ def registFavoriteIndex():
     return make_response(jsonify({"code": 201, "index": favorite_index_list}))
 
 
-@favorite_index_router.route("/favorite_question", methods=["DELETE"])
+@favorite_index_router.route("/favorite-question", methods=["DELETE"])
 @jwt_required()
 def deleteFavoriteIndex():
 
