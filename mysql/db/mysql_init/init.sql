@@ -99,7 +99,6 @@ CREATE TABLE indices(
     `index` varchar(50) NOT NULL,
     questioner INT NOT NULL,
     language_id INT NOT NULL,
-    frequently_used_count INT NOT NULL default 0,
     `date` TIMESTAMP NOT NULL default CURRENT_TIMESTAMP,
     FOREIGN KEY (questioner)
         REFERENCES users(id) ON DELETE CASCADE,

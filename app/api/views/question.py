@@ -6,6 +6,7 @@ from api.models import (
     IndexSchema,
     IndexCategoryTag,
     IndexCategorytagSchema,
+    IndexUserCommunityTag,
 )
 from flask_jwt_extended import jwt_required, current_user
 from ..token import jwt
@@ -193,7 +194,7 @@ def getUserIndexList():
 
 
 # 要回答見出し取得API
-@question_router.route("/unpopular_question", methods=["GET"])
+@question_router.route("/unpopular-question", methods=["GET"])
 @jwt_required(optional=True)
 def getUnpopularIndexList():
 
@@ -232,6 +233,70 @@ def getUnpopularIndexList():
 
     return make_response(
         jsonify({"code": 200, "indices": merge_indices_categorytags(indices_list)})
+    )
+
+
+# 見出しよく使うカウントアップAPI
+@question_router.route("/count-up-frequently-used", methods=["POST"])
+@jwt_required()
+def countupFrequently():
+
+    # jsonデータを取得する
+    jsonData = json.dumps(request.json)
+    indexData = json.loads(jsonData)
+
+    if indexData is None or not "index_id" in indexData or indexData["index_id"] == "":
+        abort(400, {"message": "parameter is a required"})
+
+    if current_user is not None:
+        indexData["user_id"] = current_user.id
+    else:
+        abort(400, {"message": "Login required"})
+
+    try:
+        index = IndexUserCommunityTag.countupCommunityTag(indexData)
+        if index != False:
+            index_schema = IndexSchema(many=True)
+            index_list = index_schema.dump(index)
+        else:
+            abort(400, {"message": "count failed"})
+    except ValueError:
+        abort(400, {"message": "count failed"})
+
+    return make_response(
+        jsonify({"code": 201, "index": merge_indices_categorytags(index_list)})
+    )
+
+
+# 見出しよく使うカウントダウンAPI
+@question_router.route("/count-down-frequently-used", methods=["POST"])
+@jwt_required()
+def countdownFrequently():
+
+    # jsonデータを取得する
+    jsonData = json.dumps(request.json)
+    indexData = json.loads(jsonData)
+
+    if indexData is None or not "index_id" in indexData or indexData["index_id"] == "":
+        abort(400, {"message": "parameter is a required"})
+
+    if current_user is not None:
+        indexData["user_id"] = current_user.id
+    else:
+        abort(400, {"message": "Login required"})
+
+    try:
+        index = IndexUserCommunityTag.countdownCommunityTag(indexData)
+        if index != False:
+            index_schema = IndexSchema(many=True)
+            index_list = index_schema.dump(index)
+        else:
+            abort(400, {"message": "count failed"})
+    except ValueError:
+        abort(400, {"message": "count failed"})
+
+    return make_response(
+        jsonify({"code": 201, "index": merge_indices_categorytags(index_list)})
     )
 
 
