@@ -1,4 +1,5 @@
 from flask import Blueprint, request, make_response, jsonify, abort
+from werkzeug.wrappers import response
 from api.models import (
     User,
     UserSchema,
@@ -7,7 +8,13 @@ from api.models import (
     UserCommunityTag,
     UserCommunityTagSchema,
 )
-from flask_jwt_extended import jwt_required, unset_jwt_cookies, get_jwt, current_user
+from flask_jwt_extended import (
+    jwt_required,
+    unset_jwt_cookies,
+    get_jwt,
+    current_user,
+    set_access_cookies,
+)
 from email_validator import validate_email, EmailNotValidError
 from ..token import jwt, Redis
 import json
@@ -107,12 +114,13 @@ def postUserLogin():
         loginuser = User.loginUser(userData)
         login_user_schema = UserSchema(many=True)
         loginuser_list = login_user_schema.dump([loginuser])
+
+        response = jsonify({"code": 201, "user": merge_user_list(loginuser_list)})
+        set_access_cookies(response, loginuser["access_token"])
     except ValueError:
         abort(400, {"message": "login failed"})
 
-    return make_response(
-        jsonify({"code": 201, "user": merge_user_list(loginuser_list)})
-    )
+    return make_response(response)
 
 
 @user_router.route("/logout", methods=["POST"])

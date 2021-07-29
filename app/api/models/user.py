@@ -89,9 +89,6 @@ class User(db.Model):
         else:
 
             access_token = create_access_token(identity=user)
-            response = jsonify({"msg": "login successful"})
-            set_access_cookies(response, access_token)
-
             login_user = {
                 "id": user.id,
                 "username": user.username,

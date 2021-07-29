@@ -102,6 +102,12 @@ class Index(db.Model):
             index_list.order_by(desc(Index.date)).distinct(Index.id).limit(index_limit)
         )
 
+        print(
+            index_list.statement.compile(
+                dialect=mysql.dialect(), compile_kwargs={"literal_binds": True}
+            )
+        )
+
         if index_list == null:
             return []
         else:

@@ -23,7 +23,7 @@ def error_handler(err):
 
 
 @answer_router.route("/answer", methods=["GET"])
-@jwt_required()
+@jwt_required(optional=True)
 def getAnswerList():
 
     contents = request.args
