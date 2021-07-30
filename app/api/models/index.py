@@ -349,7 +349,6 @@ class Index(db.Model):
             id=0,
             index=indices["index"],
             questioner=indices["questioner"],
-            frequently_used_count=0,
             language_id=indices["language_id"],
             date=datetime.datetime.now(),
         )
