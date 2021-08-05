@@ -13,6 +13,7 @@ services:
     tty: true
     volumes:
       - ./app:/app
+    command: ['python', 'app.py']
   whatisgrass_mysql:
     container_name: whatisgrass-mysql
     image: mysql:8.0
