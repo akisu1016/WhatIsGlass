@@ -21,12 +21,13 @@ CREATE TABLE users (
     username varchar(20) NOT NULL,
     email varchar(256) NOT NULL,
     password varchar(255) NOT NULL,
-    icon varchar(300)
+    icon varchar(300),
+    answer_filter INT default 2
 );
 
 INSERT INTO users VALUES
-(0, '英語太郎', 'English@gmail.com', 'english', 'iconpath/english'),
-(0, '日本太郎', 'japanese@gmail.com', 'japanese', null);
+(0, '英語太郎', 'English@gmail.com', 'english', 'iconpath/english', 2),
+(0, '日本太郎', 'japanese@gmail.com', 'japanese', null, 2);
 
 CREATE TABLE languages(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -171,8 +172,9 @@ CREATE TABLE answers(
     `definition` varchar(100) NOT NULL,
     origin varchar(300),
     note varchar(200),
-    informative_count INT NOT NULL default 0,
+    relevance INT NOT NULL default 30,
     `date` TIMESTAMP NOT NULL default CURRENT_TIMESTAMP,
+
     FOREIGN KEY (user_id)
         REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (index_id)
@@ -189,6 +191,16 @@ INSERT INTO answers(id, user_id, index_id, `definition`, origin, note) VALUES
 (0, 1, 4, 'やぁ。最近どう？何かあった？', '', 'メールやSNS上でよく見かける表現');
 
 CREATE TABLE answers_infomative(
+    answer_id INT,
+    user_id INT,
+    PRIMARY KEY(answer_id , user_id),
+    FOREIGN KEY (answer_id )
+        REFERENCES answers(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id)
+        REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE answers_relevance(
     answer_id INT,
     user_id INT,
     PRIMARY KEY(answer_id , user_id),

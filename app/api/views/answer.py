@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, abort
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.operators import exists
-from api.models import Answer, AnswerSchema, ExampleAnswer
+from api.models import Answer, AnswerSchema, ExampleAnswer, AnswerInformative
 from flask_jwt_extended import jwt_required, current_user
 from ..token import jwt
 import json
@@ -113,3 +113,71 @@ def registAnswer():
         abort(400, {"message": "value is invalid"})
 
     return make_response(jsonify({"code": 201, "answer": response_query}))
+
+
+# 回答役に立つカウントアップAPI
+@answer_router.route("/count-up-informative", methods=["POST"])
+@jwt_required()
+def countupInformative():
+
+    # jsonデータを取得する
+    jsonData = json.dumps(request.json)
+    answerData = json.loads(jsonData)
+
+    if (
+        answerData is None
+        or not "answer_id" in answerData
+        or answerData["answer_id"] == ""
+    ):
+        abort(400, {"message": "parameter is a required"})
+
+    if current_user is not None:
+        answerData["user_id"] = current_user.id
+    else:
+        abort(400, {"message": "Login required"})
+
+    try:
+        answer = AnswerInformative.countupInformative(answerData)
+        if answer != False:
+            answer_schema = AnswerSchema(many=True)
+            answer_list = answer_schema.dump(answer)
+        else:
+            abort(400, {"message": "count failed"})
+    except ValueError:
+        abort(400, {"message": "count failed"})
+
+    return make_response(jsonify({"code": 201, "answer": answer_list[0]}))
+
+
+# 回答役に立つカウントダウンAPI
+@answer_router.route("/count-down-informative", methods=["POST"])
+@jwt_required()
+def countdownInformative():
+
+    # jsonデータを取得する
+    jsonData = json.dumps(request.json)
+    answerData = json.loads(jsonData)
+
+    if (
+        answerData is None
+        or not "answer_id" in answerData
+        or answerData["answer_id"] == ""
+    ):
+        abort(400, {"message": "parameter is a required"})
+
+    if current_user is not None:
+        answerData["user_id"] = current_user.id
+    else:
+        abort(400, {"message": "Login required"})
+
+    try:
+        answer = AnswerInformative.countdownInformative(answerData)
+        if answer != False:
+            answer_schema = AnswerSchema(many=True)
+            answer_list = answer_schema.dump(answer)
+        else:
+            abort(400, {"message": "count failed"})
+    except ValueError:
+        abort(400, {"message": "count failed"})
+
+    return make_response(jsonify({"code": 201, "answer": answer_list[0]}))

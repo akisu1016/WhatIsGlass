@@ -20,7 +20,6 @@ class Answer(db.Model):
     definition = db.Column(db.String(100), nullable=False)
     origin = db.Column(db.String(300), nullable=False)
     note = db.Column(db.String(200), nullable=False)
-    informative_count = db.Column(db.Integer, nullable=False)
     date = db.Column(db.TIMESTAMP, nullable=True)
 
     def __repr__(self):
@@ -28,9 +27,26 @@ class Answer(db.Model):
 
     def getAnswerList(request_index_id):
 
+        informative_count = AnswerInformative.countInformative()
+
         # select * from users
         answer_list = (
-            db.session.query(Answer)
+            db.session.query(
+                Answer.id,
+                Answer.user_id,
+                Answer.index_id,
+                Answer.definition,
+                Answer.origin,
+                Answer.note,
+                func.ifnull(informative_count.c.informative_count, 0).label(
+                    "informative_count"
+                ),
+                Answer.date,
+            )
+            .outerjoin(
+                informative_count,
+                Answer.id == informative_count.c.answer_id,
+            )
             .filter(request_index_id["index_id"] == Answer.index_id)
             .all()
         )
@@ -39,6 +55,38 @@ class Answer(db.Model):
             return []
         else:
             return answer_list
+
+    def getAnswer(answer_id):
+
+        informative_count = AnswerInformative.countInformative()
+
+        answer = (
+            db.session.query(
+                Answer.id,
+                Answer.user_id,
+                Answer.index_id,
+                Answer.definition,
+                Answer.origin,
+                Answer.note,
+                func.ifnull(informative_count.c.informative_count, 0).label(
+                    "informative_count"
+                ),
+                Answer.date,
+            )
+            .outerjoin(
+                informative_count,
+                Answer.id == informative_count.c.answer_id,
+            )
+            .filter(
+                Answer.id == answer_id,
+            )
+            .all()
+        )
+
+        if answer is None:
+            return []
+        else:
+            return answer
 
     def getUserAnswerList(request_dict):
 
@@ -57,16 +105,25 @@ class Answer(db.Model):
             else 100
         )
 
+        informative_count = AnswerInformative.countInformative()
+
         answer_list = (
             db.session.query(
                 Answer.id,
+                Answer.user_id,
                 Answer.index_id,
                 Answer.definition,
                 Answer.origin,
                 Answer.note,
-                Answer.informative_count,
+                func.ifnull(informative_count.c.informative_count, 0).label(
+                    "informative_count"
+                ),
                 Answer.date,
                 User.username,
+            )
+            .outerjoin(
+                informative_count,
+                Answer.id == informative_count.c.answer_id,
             )
             .filter(
                 Answer.index_id == Index.id,
@@ -99,7 +156,6 @@ class Answer(db.Model):
             definition=answer["definition"],
             origin=answer["origin"],
             note=answer["note"],
-            informative_count=0,
             date=datetime.datetime.now(),
         )
 
@@ -133,6 +189,89 @@ class Answer(db.Model):
         answer_dict[0]["example"] = example_dict
 
         return answer_dict
+
+
+class AnswerInformative(db.Model):
+    __tablename__ = "answers_infomative"
+
+    answer_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    def __repr__(self):
+        return "<answers_infomative %r>" % self.answer_id, self.user_id
+
+    def countupInformative(request):
+        answer_id = request["answer_id"]
+        user_id = request["user_id"]
+
+        # 存在確認
+        Informative_exist = (
+            db.session.query(AnswerInformative)
+            .filter(
+                AnswerInformative.user_id == user_id,
+                AnswerInformative.answer_id == answer_id,
+            )
+            .first()
+        )
+
+        if Informative_exist is not None:
+            return False
+
+        try:
+            record = AnswerInformative(user_id=user_id, answer_id=answer_id)
+            db.session.add(record)
+            db.session.flush()
+            db.session.commit()
+        except ValueError:
+            return False
+
+        answer = Answer.getAnswer(answer_id)
+
+        return answer
+
+    def countdownInformative(request):
+        answer_id = request["answer_id"]
+        user_id = request["user_id"]
+
+        # 存在確認
+        Informative_exist = (
+            db.session.query(AnswerInformative)
+            .filter(
+                AnswerInformative.user_id == user_id,
+                AnswerInformative.answer_id == answer_id,
+            )
+            .first()
+        )
+
+        if Informative_exist is None:
+            return False
+
+        try:
+            db.session.query(AnswerInformative).filter(
+                AnswerInformative.answer_id == answer_id,
+                AnswerInformative.user_id == user_id,
+            ).delete(synchronize_session="fetch")
+            db.session.flush()
+            db.session.commit()
+        except ValueError:
+            return
+
+        answer = Answer.getAnswer(answer_id)
+
+        return answer
+
+    def countInformative():
+
+        informative_count = (
+            db.session.query(
+                AnswerInformative.answer_id,
+                func.count(AnswerInformative.answer_id).label("informative_count"),
+            )
+            .group_by(AnswerInformative.answer_id)
+            .subquery("informative_count")
+        )
+
+        return informative_count
 
 
 class AnswerSchema(ma.SQLAlchemyAutoSchema):
