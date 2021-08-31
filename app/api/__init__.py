@@ -5,6 +5,7 @@ from .views.answer import answer_router
 from .views.example_answer import example_answer_router
 from .views.categorytag import categorytag_router
 from .views.favorite_index import favorite_index_router
+from .views.communitytag import communitytag_router
 from flask_cors import CORS
 from api.database import db
 from api.token import jwt
@@ -29,6 +30,7 @@ def create_app():
     app.register_blueprint(example_answer_router, url_prefix="/api")
     app.register_blueprint(categorytag_router, url_prefix="/api")
     app.register_blueprint(favorite_index_router, url_prefix="/api")
+    app.register_blueprint(communitytag_router, url_prefix="/api")
 
     return app
 
