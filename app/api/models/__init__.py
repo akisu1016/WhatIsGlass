@@ -1,6 +1,6 @@
 from .user import User, UserSchema
 from .index import Index, IndexUserCommunityTag, IndexSchema
-from .answer import Answer, AnswerSchema
+from .answer import Answer, AnswerSchema, AnswerInformative
 from .example_answer import ExampleAnswer, ExampleAnswerSchema
 from .categorytag import (
     CategoryTag,

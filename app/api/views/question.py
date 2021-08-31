@@ -135,7 +135,7 @@ def registIndex():
     except ValueError:
         abort(400, {"message": "post failed"})
 
-    return make_response(jsonify({"code": 201, "index": index_schema.dump(index)}))
+    return make_response(jsonify({"code": 201, "index": index_schema.dump(index)[0]}))
 
 
 # ユーザー見出し一覧API
@@ -309,10 +309,10 @@ def merge_indices_categorytags(indices_list):
     for indices_dict in indices_list:
         categorytags = IndexCategoryTag.getCategoryTagList(indices_dict)
         categorytags_list = categorytag_schema.dump(categorytags)
-        indices_dict["categorytags"] = []
+        indices_dict["category_tags"] = []
         for categorytags_dict in categorytags_list:
             if indices_dict["id"] == categorytags_dict["index_id"]:
-                indices_dict["categorytags"].append(
+                indices_dict["category_tags"].append(
                     {
                         "id": categorytags_dict["category_tag_id"],
                         "category_tag_name": categorytags_dict["category_name"],
