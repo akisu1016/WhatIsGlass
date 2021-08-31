@@ -15,5 +15,10 @@ from .community_tag import (
     UserCommunityTagSchema,
 )
 from .example_answer import ExampleAnswer, ExampleAnswerSchema
-from .language import Language, UserLanguage, LanguageSchema, UserLanguageSchema
+from .language import (
+    Language,
+    UserFirstLanguage,
+    LanguageSchema,
+    UserFirstLanguageSchema,
+)
 from .favorite_index import FavoriteIndex, FavoriteIndexSchema

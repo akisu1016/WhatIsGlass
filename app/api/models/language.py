@@ -24,46 +24,46 @@ class Language(db.Model):
             return language_list
 
 
-class UserLanguage(db.Model):
-    __tablename__ = "users_languages"
+class UserFirstLanguage(db.Model):
+    __tablename__ = "user_first_languages"
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     language_id = db.Column(db.Integer, db.ForeignKey("languages.id"), primary_key=True)
 
     def __repr__(self):
-        return "<users_languages %r>" % self
+        return "<user_first_languages %r>" % self
 
-    def getUserLanguageList(user):
+    def getUserFisrtLanguageList(user):
 
         user_id = user["id"]
 
-        user_language_list = (
+        user_first_language_list = (
             db.session.query(
-                UserLanguage.user_id,
-                UserLanguage.language_id,
+                UserFirstLanguage.user_id,
+                UserFirstLanguage.language_id,
                 Language.language,
             )
             .join(
                 Language,
-                UserLanguage.language_id == Language.id,
+                UserFirstLanguage.language_id == Language.id,
             )
             .filter(
-                UserLanguage.user_id == user_id,
+                UserFirstLanguage.user_id == user_id,
             )
             .all()
         )
 
-        if user_language_list is None:
+        if user_first_language_list is None:
             return []
         else:
-            return user_language_list
+            return user_first_language_list
 
-    def registUserLanguage(user):
+    def registUserFirstLanguage(user):
 
         user_id = user["id"]
 
         for language in user["languages"]:
-            record = UserLanguage(user_id=user_id, language_id=language)
+            record = UserFirstLanguage(user_id=user_id, language_id=language)
             db.session.add(record)
 
         db.session.flush()
@@ -71,16 +71,16 @@ class UserLanguage(db.Model):
 
         response = (
             db.session.query(
-                UserLanguage.user_id,
-                UserLanguage.language_id,
+                UserFirstLanguage.user_id,
+                UserFirstLanguage.language_id,
                 Language.language,
             )
             .join(
                 Language,
-                UserLanguage.language_id == Language.id,
+                UserFirstLanguage.language_id == Language.id,
             )
             .filter(
-                UserLanguage.index_id == user_id,
+                UserFirstLanguage.index_id == user_id,
             )
             .all()
         )
@@ -98,8 +98,8 @@ class LanguageSchema(ma.SQLAlchemyAutoSchema):
         fields = ("id", "language")
 
 
-class UserLanguageSchema(ma.SQLAlchemyAutoSchema):
+class UserFirstLanguageSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        model = UserLanguage
+        model = UserFirstLanguage
         load_instance = True
         fields = ("user_id", "language_id", "language")

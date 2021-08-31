@@ -1,7 +1,7 @@
 import re
 import base64
 import os
-from .language import UserLanguage
+from .language import UserFirstLanguage
 from .community_tag import UserCommunityTag
 from flask import abort, jsonify
 from sqlalchemy.sql.functions import user
@@ -52,8 +52,8 @@ class User(db.Model):
             user_id = get_user_id.id
 
         # ユーザー言語の登録
-        for language in request_dict["languages"]:
-            record = UserLanguage(user_id=user_id, language_id=int(language))
+        for first_language in request_dict["first_languages"]:
+            record = UserFirstLanguage(user_id=user_id, language_id=int(first_language))
             db.session.add(record)
 
         # ユーザーコミュニティの登録
@@ -125,14 +125,14 @@ class User(db.Model):
         user.username = username if username != "" else user.username
         user.email = email if email != "" else user.email
 
-        if request_dict["languages"] != "":
+        if request_dict["first_languages"] != "":
             # ユーザー言語のアップデート
-            db.session.query(UserLanguage).filter(User.id == user.id).delete(
+            db.session.query(UserFirstLanguage).filter(User.id == user.id).delete(
                 synchronize_session="fetch"
             )
 
-            for language in request_dict["languages"]:
-                record = UserLanguage(user_id=id, language_id=language)
+            for language in request_dict["first_languages"]:
+                record = UserFirstLanguage(user_id=id, language_id=language)
                 db.session.add(record)
 
         if request_dict["community_tags"] != "":

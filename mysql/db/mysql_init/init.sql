@@ -38,7 +38,7 @@ INSERT INTO languages VALUES
 (0, 'English'),
 (0, '日本語');
 
-CREATE TABLE users_languages(
+CREATE TABLE user_first_languages(
     user_id INT,
     language_id INT,
     PRIMARY KEY(user_id, language_id),
@@ -48,9 +48,23 @@ CREATE TABLE users_languages(
         REFERENCES languages(id) ON DELETE CASCADE
 );
 
-INSERT INTO users_languages VALUES
+INSERT INTO user_first_languages VALUES
 (1, 1),
 (2, 2);
+
+CREATE TABLE user_second_languages(
+    user_id INT,
+    language_id INT,
+    PRIMARY KEY(user_id, language_id),
+    FOREIGN KEY (user_id)
+        REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (language_id)
+        REFERENCES languages(id) ON DELETE CASCADE
+);
+
+INSERT INTO user_second_languages VALUES
+(1, 2),
+(2, 1);
 
 CREATE TABLE communitytags(
     id INT PRIMARY KEY AUTO_INCREMENT,
