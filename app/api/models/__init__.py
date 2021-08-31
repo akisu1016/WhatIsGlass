@@ -18,7 +18,8 @@ from .example_answer import ExampleAnswer, ExampleAnswerSchema
 from .language import (
     Language,
     UserFirstLanguage,
+    UserSecondLanguage,
     LanguageSchema,
-    UserFirstLanguageSchema,
+    UserLanguageSchema,
 )
 from .favorite_index import FavoriteIndex, FavoriteIndexSchema

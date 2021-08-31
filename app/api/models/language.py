@@ -62,8 +62,8 @@ class UserFirstLanguage(db.Model):
 
         user_id = user["id"]
 
-        for language in user["languages"]:
-            record = UserFirstLanguage(user_id=user_id, language_id=language)
+        for first_language in user["first_languages"]:
+            record = UserFirstLanguage(user_id=user_id, language_id=first_language)
             db.session.add(record)
 
         db.session.flush()
@@ -91,6 +91,73 @@ class UserFirstLanguage(db.Model):
             return response
 
 
+class UserSecondLanguage(db.Model):
+    __tablename__ = "user_second_languages"
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    language_id = db.Column(db.Integer, db.ForeignKey("languages.id"), primary_key=True)
+
+    def __repr__(self):
+        return "<user_second_languages %r>" % self
+
+    def getUserSecondLanguageList(user):
+
+        user_id = user["id"]
+
+        user_sencond_language_list = (
+            db.session.query(
+                UserSecondLanguage.user_id,
+                UserSecondLanguage.language_id,
+                Language.language,
+            )
+            .join(
+                Language,
+                UserSecondLanguage.language_id == Language.id,
+            )
+            .filter(
+                UserSecondLanguage.user_id == user_id,
+            )
+            .all()
+        )
+
+        if user_sencond_language_list is None:
+            return []
+        else:
+            return user_sencond_language_list
+
+    def registUserSecondLanguage(user):
+
+        user_id = user["id"]
+
+        for second_language in user["second_languages"]:
+            record = UserSecondLanguage(user_id=user_id, language_id=second_language)
+            db.session.add(record)
+
+        db.session.flush()
+        db.session.commit()
+
+        response = (
+            db.session.query(
+                UserSecondLanguage.user_id,
+                UserSecondLanguage.language_id,
+                Language.language,
+            )
+            .join(
+                Language,
+                UserSecondLanguage.language_id == Language.id,
+            )
+            .filter(
+                UserSecondLanguage.index_id == user_id,
+            )
+            .all()
+        )
+
+        if response is None:
+            return []
+        else:
+            return response
+
+
 class LanguageSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Language
@@ -98,7 +165,7 @@ class LanguageSchema(ma.SQLAlchemyAutoSchema):
         fields = ("id", "language")
 
 
-class UserFirstLanguageSchema(ma.SQLAlchemyAutoSchema):
+class UserLanguageSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = UserFirstLanguage
         load_instance = True
