@@ -1,7 +1,7 @@
 import re
 import base64
 import os
-from .language import UserLanguage
+from .language import UserFirstLanguage, UserSecondLanguage
 from .community_tag import UserCommunityTag
 from flask import abort, jsonify
 from sqlalchemy.sql.functions import user
@@ -52,8 +52,15 @@ class User(db.Model):
             user_id = get_user_id.id
 
         # ユーザー言語の登録
-        for language in request_dict["languages"]:
-            record = UserLanguage(user_id=user_id, language_id=int(language))
+        for first_language in request_dict["first_languages"]:
+            record = UserFirstLanguage(user_id=user_id, language_id=int(first_language))
+            db.session.add(record)
+
+        # ユーザー言語の登録
+        for second_language in request_dict["second_languages"]:
+            record = UserSecondLanguage(
+                user_id=user_id, language_id=int(second_language)
+            )
             db.session.add(record)
 
         # ユーザーコミュニティの登録
@@ -125,14 +132,24 @@ class User(db.Model):
         user.username = username if username != "" else user.username
         user.email = email if email != "" else user.email
 
-        if request_dict["languages"] != "":
-            # ユーザー言語のアップデート
-            db.session.query(UserLanguage).filter(User.id == user.id).delete(
+        # ユーザー言語のアップデート
+        if request_dict["first_languages"] != "":
+            db.session.query(UserFirstLanguage).filter(User.id == user.id).delete(
                 synchronize_session="fetch"
             )
 
-            for language in request_dict["languages"]:
-                record = UserLanguage(user_id=id, language_id=language)
+            for first_anguage in request_dict["first_languages"]:
+                record = UserFirstLanguage(user_id=id, language_id=first_anguage)
+                db.session.add(record)
+
+        if request_dict["second_languages"] != "":
+            db.session.query(UserSecondLanguage).filter(User.id == user.id).delete(
+                synchronize_session="fetch"
+            )
+
+            for second_language in request_dict["second_languages"]:
+                record = UserSecondLanguage(user_id=id, language_id=second_language)
+                print("aaaaaaaaaaaaa")
                 db.session.add(record)
 
         if request_dict["community_tags"] != "":
@@ -156,6 +173,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
             "email",
             "password",
             "icon",
-            "languages",
+            "first_languages",
+            "second_languages",
             "access_token",
         )

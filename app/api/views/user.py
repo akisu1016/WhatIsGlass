@@ -3,7 +3,8 @@ from werkzeug.wrappers import response
 from api.models import (
     User,
     UserSchema,
-    UserLanguage,
+    UserFirstLanguage,
+    UserSecondLanguage,
     UserLanguageSchema,
     UserCommunityTag,
     UserCommunityTagSchema,
@@ -62,12 +63,14 @@ def postUserSignup():
         not "username" in userData
         or not "email" in userData
         or not "password" in userData
-        or not "languages" in userData
+        or not "first_languages" in userData
+        or not "second_languages" in userData
         or not "community_tags" in userData
         or userData["username"] == ""
         or userData["email"] == ""
         or userData["password"] == ""
-        or userData["languages"] == ""
+        or userData["first_languages"] == ""
+        or userData["second_languages"] == ""
         or userData["community_tags"] == ""
     ):
         abort(400, {"message": "parameter is a required"})
@@ -143,7 +146,12 @@ def postUserEdit():
     userData["user_id"] = current_user.id
     userData["username"] = "" if not "username" in userData else userData["username"]
     userData["email"] = "" if not "email" in userData else userData["email"]
-    userData["languages"] = "" if not "languages" in userData else userData["languages"]
+    userData["first_languages"] = (
+        "" if not "first_languages" in userData else userData["first_languages"]
+    )
+    userData["second_languages"] = (
+        "" if not "second_languages" in userData else userData["second_languages"]
+    )
     userData["community_tags"] = (
         "" if not "community_tags" in userData else userData["community_tags"]
     )
@@ -152,11 +160,13 @@ def postUserEdit():
         userData is None
         or not "email" in userData
         and not "username" in userData
-        and not "languages" in userData
+        and not "first_languages" in userData
+        and not "second_languages" in userData
         and not "community_tags" in userData
         or userData["email"] == ""
         and userData["username"] == ""
-        and userData["languages"] == ""
+        and userData["first_languages"] == ""
+        and userData["second_languages"] == ""
         and userData["community_tags"] == ""
     ):
         abort(400, {"message": "parameter is a required"})
@@ -186,15 +196,24 @@ def getLoginUser():
         "username": current_user.username,
         "email": current_user.email,
     }
-    user["languages"] = []
+    user["first_languages"] = []
+    user["second_languages"] = []
     user["community_tags"] = []
-    UserLanguageList = UserLanguage.getUserLanguageList(user)
+    UserFirstLanguageList = UserFirstLanguage.getUserFisrtLanguageList(user)
+    UserSecondLanguageList = UserSecondLanguage.getUserSecondLanguageList(user)
     UserCommunityTagList = UserCommunityTag.getCommunityTagList(user)
-    for UserLanguageDict in UserLanguageList:
-        user["languages"].append(
+    for UserFirstLanguageDict in UserFirstLanguageList:
+        user["first_languages"].append(
             {
-                "id": UserLanguageDict["language_id"],
-                "language": UserLanguageDict["language"],
+                "id": UserFirstLanguageDict["language_id"],
+                "language": UserFirstLanguageDict["language"],
+            }
+        )
+    for UserSecondLanguageDict in UserSecondLanguageList:
+        user["second_languages"].append(
+            {
+                "id": UserSecondLanguageDict["language_id"],
+                "language": UserSecondLanguageDict["language"],
             }
         )
     for UserCommunityTagDict in UserCommunityTagList:
@@ -215,18 +234,30 @@ def merge_user_list(user_list):
     user_community_tag_schema = UserCommunityTagSchema(many=True)
 
     for user_dict in user_list:
-        languages = UserLanguage.getUserLanguageList(user_dict)
+        first_languages = UserFirstLanguage.getUserFisrtLanguageList(user_dict)
+        second_languages = UserSecondLanguage.getUserSecondLanguageList(user_dict)
         community_tags = UserCommunityTag.getCommunityTagList(user_dict)
-        languages_list = user_language_schema.dump(languages)
+        first_languages_list = user_language_schema.dump(first_languages)
+        second_languages_list = user_language_schema.dump(second_languages)
         community_tag_list = user_community_tag_schema.dump(community_tags)
-        user_dict["languages"] = []
+        user_dict["first_languages"] = []
+        user_dict["second_languages"] = []
         user_dict["community_tags"] = []
-        for languages_dict in languages_list:
-            if user_dict["id"] == languages_dict["user_id"]:
-                user_dict["languages"].append(
+        for first_languages_dict in first_languages_list:
+            if user_dict["id"] == first_languages_dict["user_id"]:
+                user_dict["first_languages"].append(
                     {
-                        "id": languages_dict["language_id"],
-                        "language": languages_dict["language"],
+                        "id": first_languages_dict["language_id"],
+                        "language": first_languages_dict["language"],
+                    }
+                )
+
+        for second_languages_dict in second_languages_list:
+            if user_dict["id"] == second_languages_dict["user_id"]:
+                user_dict["second_languages"].append(
+                    {
+                        "id": second_languages_dict["language_id"],
+                        "language": second_languages_dict["language"],
                     }
                 )
 
