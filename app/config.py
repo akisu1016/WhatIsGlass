@@ -14,7 +14,8 @@ class SystemConfig:
     # JWT署名鍵
     JWT_SECRET_KEY = const.JWT_SECRET_KEY
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
-    JWT_COOKIE_SECURE = False
+    JWT_COOKIE_SAMESITE="None"
+    JWT_COOKIE_SECURE = True
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=72)
 
 
