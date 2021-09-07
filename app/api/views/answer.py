@@ -1,7 +1,8 @@
 from flask import Blueprint, request, make_response, jsonify, abort
-from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import false, true
 from sqlalchemy.sql.operators import exists
 from api.models import Answer, AnswerSchema, ExampleAnswer, AnswerInformative
+from api.requests.answer import ValidateAnswer
 from flask_jwt_extended import jwt_required, current_user
 from ..token import jwt
 import json
@@ -27,11 +28,10 @@ def error_handler(err):
 def getAnswerList():
 
     contents = request.args
+    request_dict = dict(index_id=contents.get("index_id"))
 
-    if contents.get("index_id") is not None and contents.get("index_id") != "":
-        request_dict = {"index_id": contents.get("index_id")}
-    else:
-        abort(400, {"message": "index_id is required"})
+    if ValidateAnswer.validateGetAnswerList(request_dict) is False:
+        abort(400, {"message": "parameter is a required"})
 
     try:
         answers = Answer.getAnswerList(request_dict)
@@ -47,7 +47,15 @@ def getAnswerList():
 def getUserAnswerList():
 
     contents = request.args
-    if contents is None:
+    request_dict = dict(
+        sort=contents.get("sort"),
+        language_id=contents.get("language_id"),
+        answer_limit=contents.get("answer_limit"),
+    )
+
+    print(type(request_dict))
+
+    if ValidateAnswer.validateGetUserAnswerList(request_dict) is False:
         abort(400, {"message": "parameter is a required"})
 
     try:
@@ -65,20 +73,6 @@ def getUserAnswerList():
         if contents.get("sort") is not None and contents.get("sort") != "":
             request_dict["sort"] = contents.get("sort")
 
-        if (
-            contents.get("answer_limit") is not None
-            and contents.get("answer_limit") != ""
-        ):
-            request_dict["answer_limit"] = contents.get("answer_limit")
-
-        if (
-            contents.get("language_id") is not None
-            and contents.get("language_id") != ""
-        ):
-            request_dict["language_id"] = contents.get("language_id")
-        else:
-            abort(400, {"message": "language_id is required"})
-
         answers = Answer.getUserAnswerList(request_dict)
         answer_schema = AnswerSchema(many=True)
     except ValueError:
@@ -95,13 +89,7 @@ def registAnswer():
     jsonData = json.dumps(request.json)
     answerData = json.loads(jsonData)
 
-    if (
-        answerData is None
-        or "index_id" not in answerData
-        or "definition" not in answerData
-        or answerData["index_id"] == ""
-        or answerData["definition"] == ""
-    ):
+    if ValidateAnswer.validateRegistAnswer(answerData) is False:
         abort(400, {"message": "parameter is a required"})
 
     try:
