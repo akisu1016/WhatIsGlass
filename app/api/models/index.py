@@ -1,7 +1,7 @@
 import re
 from api.database import db, ma
 from sqlalchemy import *
-from .answer import Answer
+from .answer import Answer, AnswerInformative
 from .user import User
 from .categorytag import IndexCategoryTag
 from .favorite_index import FavoriteIndex
@@ -100,12 +100,6 @@ class Index(db.Model):
 
         index_list = (
             index_list.order_by(desc(Index.date)).distinct(Index.id).limit(index_limit)
-        )
-
-        print(
-            index_list.statement.compile(
-                dialect=mysql.dialect(), compile_kwargs={"literal_binds": True}
-            )
         )
 
         if index_list == null:
@@ -379,24 +373,30 @@ class Index(db.Model):
 
     def get_best_answer():
         # ベストアンサーを一覧取得するためのクエリ
+        informative_count = AnswerInformative.countInformative()
+
         max_informative = (
             db.session.query(
-                Answer.index_id, func.max(Answer.informative_count).label("max_count")
+                informative_count.c.answer_id,
+                func.max(func.ifnull(informative_count.c.informative_count, 0)).label(
+                    "max_count"
+                ),
             )
-            .group_by(Answer.index_id)
-            .subquery("max_informative")
+            .group_by(informative_count.c.answer_id)
+            .subquery("best_answer")
         )
 
         best_answer = (
             db.session.query(
-                Answer.index_id, func.any_value(Answer.definition).label("best_answer")
+                Answer.id,
+                Answer.index_id,
+                func.any_value(Answer.definition).label("best_answer"),
             )
             .join(
                 max_informative,
-                Answer.index_id == max_informative.c.index_id,
+                Answer.id == max_informative.c.answer_id,
             )
-            .filter(Answer.informative_count == max_informative.c.max_count)
-            .group_by(Answer.index_id)
+            .group_by(Answer.id)
             .having(func.max(Answer.date))
             .subquery("best_answer")
         )
