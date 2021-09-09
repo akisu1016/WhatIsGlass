@@ -1,5 +1,6 @@
 from os import kill
 from flask import Blueprint, request, make_response, jsonify, session, abort
+from sqlalchemy.orm.exc import NoResultFound
 from api.models import User
 from api.models import (
     Index,
@@ -12,6 +13,7 @@ from api.models import UserFirstLanguage, UserSecondLanguage, UserLanguageSchema
 from flask_jwt_extended import jwt_required, current_user
 from ..token import jwt
 import json
+import copy
 
 # ルーティング設定
 question_router = Blueprint("question_router", __name__)
@@ -95,15 +97,17 @@ def getIndex():
         if contents.get("index_id") is None or contents.get("index_id") == "":
             abort(400, {"message": "index_id is required"})
 
-        indices = Index.getIndex(contents.get("index_id"))
-        index_schema = IndexSchema(many=True)
-        indices_list = index_schema.dump(indices)
+        row_index = Index.getIndex(contents.get("index_id"))
+        index_schema = IndexSchema()
+        index = index_schema.dump(row_index)
 
     except ValueError:
         abort(400, {"message": "get failed"})
+    except NoResultFound:
+        abort(400, {"message": "index not found"})
 
     return make_response(
-        jsonify({"code": 200, "indices": merge_indices_categorytags(indices_list)})
+        jsonify({"code": 200, "index": merge_index_categorytags(index)})
     )
 
 
@@ -316,24 +320,35 @@ def countdownFrequently():
     )
 
 
+##見出しとカテゴリータグリストをマージする
+def merge_index_categorytags(index):
+
+    categorytag_schema = IndexCategorytagSchema(many=True)
+
+    categorytags = IndexCategoryTag.getCategoryTagList(index)
+    categorytags_list = categorytag_schema.dump(categorytags)
+
+    index_copy = copy.deepcopy(index)
+
+    index_copy["category_tags"] = []
+    for categorytags_dict in categorytags_list:
+        if index_copy["id"] == categorytags_dict["index_id"]:
+            index_copy["category_tags"].append(
+                {
+                    "id": categorytags_dict["category_tag_id"],
+                    "category_tag_name": categorytags_dict["category_name"],
+                }
+            )
+
+    return index_copy
+
 ##見出しのリストとカテゴリータグリストをマージする
 def merge_indices_categorytags(indices_list):
 
     indices_categorytag_list = []
-    categorytag_schema = IndexCategorytagSchema(many=True)
 
     for indices_dict in indices_list:
-        categorytags = IndexCategoryTag.getCategoryTagList(indices_dict)
-        categorytags_list = categorytag_schema.dump(categorytags)
-        indices_dict["category_tags"] = []
-        for categorytags_dict in categorytags_list:
-            if indices_dict["id"] == categorytags_dict["index_id"]:
-                indices_dict["category_tags"].append(
-                    {
-                        "id": categorytags_dict["category_tag_id"],
-                        "category_tag_name": categorytags_dict["category_name"],
-                    }
-                )
-        indices_categorytag_list.append(indices_dict)
+        index_with_categorytags = merge_index_categorytags(indices_dict)
+        indices_categorytag_list.append(index_with_categorytags)
 
     return indices_categorytag_list

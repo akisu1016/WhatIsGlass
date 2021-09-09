@@ -136,13 +136,10 @@ class Index(db.Model):
                 Index.id == answer_count.c.index_id,
                 Index.id == Index.id == index_id,
             )
-            .all()
+            .one()
         )
 
-        if index == null:
-            return []
-        else:
-            return index
+        return index
 
     def getUserIndexList(request_dict):
         # リクエストから取得
