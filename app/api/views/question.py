@@ -1,5 +1,6 @@
 from os import kill
 from flask import Blueprint, request, make_response, jsonify, session, abort
+from sqlalchemy.orm.exc import NoResultFound
 from api.models import User
 from api.models import (
     Index,
@@ -96,15 +97,17 @@ def getIndex():
         if contents.get("index_id") is None or contents.get("index_id") == "":
             abort(400, {"message": "index_id is required"})
 
-        indices = Index.getIndex(contents.get("index_id"))
-        index_schema = IndexSchema(many=True)
-        indices_list = index_schema.dump(indices)
+        row_index = Index.getIndex(contents.get("index_id"))
+        index_schema = IndexSchema()
+        index = index_schema.dump(row_index)
 
     except ValueError:
         abort(400, {"message": "get failed"})
+    except NoResultFound:
+        abort(400, {"message": "index not found"})
 
     return make_response(
-        jsonify({"code": 200, "indices": merge_indices_categorytags(indices_list)})
+        jsonify({"code": 200, "index": merge_index_categorytags(index)})
     )
 
 
