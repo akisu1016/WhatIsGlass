@@ -12,6 +12,7 @@ from api.models import UserFirstLanguage, UserSecondLanguage, UserLanguageSchema
 from flask_jwt_extended import jwt_required, current_user
 from ..token import jwt
 import json
+import copy
 
 # ルーティング設定
 question_router = Blueprint("question_router", __name__)
@@ -316,24 +317,35 @@ def countdownFrequently():
     )
 
 
+##見出しとカテゴリータグリストをマージする
+def merge_index_categorytags(index):
+
+    categorytag_schema = IndexCategorytagSchema(many=True)
+
+    categorytags = IndexCategoryTag.getCategoryTagList(index)
+    categorytags_list = categorytag_schema.dump(categorytags)
+
+    index_copy = copy.deepcopy(index)
+
+    index_copy["category_tags"] = []
+    for categorytags_dict in categorytags_list:
+        if index_copy["id"] == categorytags_dict["index_id"]:
+            index_copy["category_tags"].append(
+                {
+                    "id": categorytags_dict["category_tag_id"],
+                    "category_tag_name": categorytags_dict["category_name"],
+                }
+            )
+
+    return index_copy
+
 ##見出しのリストとカテゴリータグリストをマージする
 def merge_indices_categorytags(indices_list):
 
     indices_categorytag_list = []
-    categorytag_schema = IndexCategorytagSchema(many=True)
 
     for indices_dict in indices_list:
-        categorytags = IndexCategoryTag.getCategoryTagList(indices_dict)
-        categorytags_list = categorytag_schema.dump(categorytags)
-        indices_dict["category_tags"] = []
-        for categorytags_dict in categorytags_list:
-            if indices_dict["id"] == categorytags_dict["index_id"]:
-                indices_dict["category_tags"].append(
-                    {
-                        "id": categorytags_dict["category_tag_id"],
-                        "category_tag_name": categorytags_dict["category_name"],
-                    }
-                )
-        indices_categorytag_list.append(indices_dict)
+        index_with_categorytags = merge_index_categorytags(indices_dict)
+        indices_categorytag_list.append(index_with_categorytags)
 
     return indices_categorytag_list
