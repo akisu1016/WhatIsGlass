@@ -8,6 +8,7 @@ from api.models import (
     IndexCategorytagSchema,
     IndexUserCommunityTag,
 )
+from api.models import UserFirstLanguage, UserSecondLanguage, UserLanguageSchema
 from flask_jwt_extended import jwt_required, current_user
 from ..token import jwt
 import json
@@ -195,7 +196,7 @@ def getUserIndexList():
 
 # 要回答見出し取得API
 @question_router.route("/unpopular-question", methods=["GET"])
-@jwt_required(optional=True)
+@jwt_required()
 def getUnpopularIndexList():
 
     try:
@@ -207,6 +208,21 @@ def getUnpopularIndexList():
             "is_random": 1,
         }
 
+        if current_user is not None:
+            request_dict["id"] = current_user.id
+            user_language_schema = UserLanguageSchema(many=True)
+            UserFirstLanguageList = user_language_schema.dump(
+                UserFirstLanguage.getUserFisrtLanguageList(request_dict)
+            )
+            language_ids = []
+
+            for UserFirstLanguageListDict in UserFirstLanguageList:
+                language_ids.append(UserFirstLanguageListDict["language_id"])
+
+            request_dict["language_ids"] = language_ids
+        else:
+            abort(400, {"message": "Login required"})
+
         if (
             contents.get("index_limit") is not None
             and contents.get("index_limit") != ""
@@ -216,13 +232,13 @@ def getUnpopularIndexList():
         if contents.get("is_random") is not None and contents.get("is_random") != "":
             request_dict["is_random"] = contents.get("is_random")
 
-        if (
-            contents.get("language_ids") is not None
-            and contents.get("language_ids") != ""
-        ):
-            request_dict["language_ids"] = contents.get("language_ids")
-        else:
-            abort(400, {"message": "language_ids is required"})
+        # if (
+        #     contents.get("language_ids") is not None
+        #     and contents.get("language_ids") != ""
+        # ):
+        #     request_dict["language_ids"] = contents.get("language_ids")
+        # else:
+        #     abort(400, {"message": "language_ids is required"})
 
         indices = Index.get_unpopular_question(request_dict)
         index_schema = IndexSchema(many=True)
