@@ -220,13 +220,9 @@ class Index(db.Model):
     # 回答者数が少ない見出しを取得
     def get_unpopular_question(request_dict):
 
-        if request_dict["language_ids"] != "":
-            language_id_filters = []
-            language_id_list = re.findall(r"\d+", request_dict["language_ids"])
-            for language_id in language_id_list:
-                language_id_filters.append(Index.language_id == language_id)
-        else:
-            return abort(400, {"message": "language_ids is required"})
+        language_id_filters = []
+        for language_id in request_dict["language_ids"]:
+            language_id_filters.append(Index.language_id == language_id)
 
         is_random = request_dict["is_random"] if request_dict["is_random"] != "" else 1
 

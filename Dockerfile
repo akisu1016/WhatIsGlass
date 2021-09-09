@@ -24,3 +24,4 @@ RUN pip install marshmallow-sqlalchemy
 RUN pip install flask-marshmallow
 RUN pip install redis
 RUN pip install email-validator
+RUN pip install cerberus
