@@ -5,6 +5,7 @@ from .answer import Answer, AnswerInformative
 from .user import User
 from .categorytag import IndexCategoryTag
 from .favorite_index import FavoriteIndex
+from .community_tag import UserCommunityTag
 import datetime
 from flask import abort
 from sqlalchemy.orm import relationship
@@ -331,6 +332,68 @@ class Index(db.Model):
         else:
             return index_list
 
+    # お勧めの見出しを取得
+    def getReccomendQuestion(request_dict):
+
+        language_id_filters = []
+        for language_id in request_dict["language_ids"]:
+            language_id_filters.append(Index.language_id == language_id)
+
+        community_tag_id = request_dict["community_tag"]
+
+        index_limit = (
+            int(request_dict["index_limit"])
+            if request_dict["index_limit"] is not ""
+            else 30
+            if int(request_dict["index_limit"]) > 300
+            else 300
+        )
+
+        answer_count = Index.get_answer_count()
+        best_answer = Index.get_best_answer()
+        community_tag = IndexUserCommunityTag.getIndexUserCommunityTag()
+        frequently_used_count = IndexUserCommunityTag.countCommunityTag()
+
+        index_list = db.session.query(
+            Index.id,
+            Index.index,
+            User.username,
+            func.ifnull(frequently_used_count.c.frequently_used_count, 0).label(
+                "frequently_used_count"
+            ),
+            Index.language_id,
+            Index.date,
+            answer_count.c.answer_count,
+            best_answer.c.best_answer,
+            community_tag.c.community_tag_id,
+        ).outerjoin(
+            frequently_used_count,
+            Index.id == frequently_used_count.c.index_id,
+        )
+
+        index_list = index_list.outerjoin(
+            best_answer, Index.id == best_answer.c.index_id
+        )
+
+        index_list = index_list.outerjoin(
+            community_tag, Index.id == community_tag.c.index_id
+        )
+
+        index_list = index_list.filter(
+            or_(*language_id_filters),
+            User.id == Index.questioner,
+            Index.id == answer_count.c.index_id,
+            community_tag.c.community_tag_id == community_tag_id,
+        )
+
+        index_list = index_list.distinct(Index.id)
+
+        index_list = index_list.order_by(func.rand())
+
+        index_list = index_list.limit(index_limit).all()
+
+        return index_list
+
     def registIndex(indices):
         record = Index(
             id=0,
@@ -431,6 +494,23 @@ class IndexUserCommunityTag(db.Model):
     def __repr__(self):
         return "<indices_users_communitytags %r>" % self.index_id, self.user_id
 
+    def getIndexUserCommunityTag():
+
+        community_tag_list = (
+            db.session.query(
+                IndexUserCommunityTag.index_id,
+                IndexUserCommunityTag.user_id,
+                UserCommunityTag.community_tag_id,
+            )
+            .outerjoin(
+                IndexUserCommunityTag,
+                IndexUserCommunityTag.user_id == UserCommunityTag.user_id,
+            )
+            .subquery("community_tag")
+        )
+
+        return community_tag_list
+
     def countupCommunityTag(request):
         index_id = request["index_id"]
         user_id = request["user_id"]
@@ -527,4 +607,5 @@ class IndexSchema(ma.SQLAlchemyAutoSchema):
             "best_answer",
             "answer_count",
             "categorytags",
+            "community_tag_id",
         )
