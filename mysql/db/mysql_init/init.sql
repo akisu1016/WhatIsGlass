@@ -75,7 +75,7 @@ INSERT INTO communitytags VALUES
 (0, 'student'),
 (0, 'office worker'),
 (0, 'engineer'),
-(0, 'hospitality industr'),
+(0, 'hospitality industry'),
 (0, 'medical industry'),
 (0, 'financial industry'),
 (0, 'primary industry'),
