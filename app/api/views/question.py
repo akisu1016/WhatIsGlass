@@ -232,15 +232,59 @@ def getUnpopularIndexList():
         if contents.get("is_random") is not None and contents.get("is_random") != "":
             request_dict["is_random"] = contents.get("is_random")
 
-        # if (
-        #     contents.get("language_ids") is not None
-        #     and contents.get("language_ids") != ""
-        # ):
-        #     request_dict["language_ids"] = contents.get("language_ids")
-        # else:
-        #     abort(400, {"message": "language_ids is required"})
-
         indices = Index.get_unpopular_question(request_dict)
+        index_schema = IndexSchema(many=True)
+        indices_list = index_schema.dump(indices)
+
+    except ValueError:
+        abort(400, {"message": "get failed"})
+
+    return make_response(
+        jsonify({"code": 200, "indices": merge_indices_categorytags(indices_list)})
+    )
+
+
+# お勧め見出し取得API
+@question_router.route("/reccomend-question", methods=["GET"])
+@jwt_required()
+def getReccomendIndexList():
+
+    try:
+        contents = request.args
+
+        # リクエストの初期値
+        request_dict = {"index_limit": 30}
+
+        if current_user is not None:
+            request_dict["id"] = current_user.id
+            user_language_schema = UserLanguageSchema(many=True)
+            UserSecondlanguageList = user_language_schema.dump(
+                UserSecondLanguage.getUserSecondLanguageList(request_dict)
+            )
+            language_ids = []
+
+            for UserSecondLanguageDict in UserSecondlanguageList:
+                language_ids.append(UserSecondLanguageDict["language_id"])
+
+            request_dict["language_ids"] = language_ids
+        else:
+            abort(400, {"message": "Login required"})
+
+        if (
+            contents.get("index_limit") is not None
+            and contents.get("index_limit") != ""
+        ):
+            request_dict["index_limit"] = contents.get("index_limit")
+
+        if (
+            contents.get("community_tag") is not None
+            and contents.get("community_tag") != ""
+        ):
+            request_dict["community_tag"] = contents.get("community_tag")
+        else:
+            abort(400, {"message": "community_tag is required"})
+
+        indices = Index.getReccomendQuestion(request_dict)
         index_schema = IndexSchema(many=True)
         indices_list = index_schema.dump(indices)
 
