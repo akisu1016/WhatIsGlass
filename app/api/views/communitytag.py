@@ -25,4 +25,4 @@ def getCommunityTagList():
     except ValueError:
         abort(400, {"message": "get failed"})
 
-    return make_response(jsonify({"code": 200, "communitytag_tags": communitytag_list}))
+    return make_response(jsonify({"code": 200, "community_tags": communitytag_list}))
