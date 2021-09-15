@@ -178,14 +178,6 @@ def getUserIndexList():
         ):
             request_dict["index_limit"] = contents.get("index_limit")
 
-        if (
-            contents.get("language_id") is not None
-            and contents.get("language_id") != ""
-        ):
-            request_dict["language_id"] = contents.get("language_id")
-        else:
-            abort(400, {"message": "language_id is required"})
-
         indices = Index.getUserIndexList(request_dict)
         index_schema = IndexSchema(many=True)
         index_list = index_schema.dump(indices)
@@ -194,7 +186,7 @@ def getUserIndexList():
         abort(400, {"message": "get failed"})
 
     return make_response(
-        jsonify({"code": 200, "indices": merge_indices_categorytags(index_list)[0]})
+        jsonify({"code": 200, "indices": merge_indices_categorytags(index_list)})
     )
 
 

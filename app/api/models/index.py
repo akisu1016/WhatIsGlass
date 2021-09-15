@@ -145,7 +145,7 @@ class Index(db.Model):
     def getUserIndexList(request_dict):
         # リクエストから取得
         sort = int(request_dict["sort"]) if request_dict["sort"] is not None else 1
-        language_id = request_dict["language_id"]
+        language_id = request_dict.get("language_id")
         include_no_answer = (
             int(request_dict["include_no_answer"])
             if request_dict["include_no_answer"] is not ""
@@ -191,11 +191,13 @@ class Index(db.Model):
             )
 
         index_list = index_list.filter(
-            Index.language_id == language_id,
             User.id == Index.questioner,
             User.id == user_id,
             Index.id == answer_count.c.index_id,
         )
+
+        if language_id == None:
+          index_list = index_list.filter(Index.language_id == language_id)
 
         if include_no_answer == 3:
             index_list = index_list.filter(answer_count.c.answer_count == 0)
