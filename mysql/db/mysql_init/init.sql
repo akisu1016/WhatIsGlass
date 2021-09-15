@@ -108,7 +108,7 @@ INSERT INTO communitytags VALUES
 (1, 'student'),
 (2, 'office worker'),
 (3, 'engineer'),
-(4, 'hospitality industr'),
+(4, 'hospitality industry'),
 (5, 'medical industry'),
 (6, 'financial industry'),
 (7, 'primary industry'),
@@ -122,6 +122,7 @@ INSERT INTO communitytags VALUES
 (15, 'athelete'),
 (16, 'male'),
 (17, 'female');
+
 
 CREATE TABLE users_communitytags(
     user_id INT,
