@@ -249,9 +249,9 @@ def getUnpopularIndexList():
 
 
 # お勧め見出し取得API
-@question_router.route("/reccomend-question", methods=["GET"])
+@question_router.route("/recommend-question", methods=["GET"])
 @jwt_required()
-def getReccomendIndexList():
+def getRecommendIndexList():
 
     try:
         contents = request.args
@@ -288,7 +288,7 @@ def getReccomendIndexList():
         else:
             abort(400, {"message": "community_tag is required"})
 
-        indices = Index.getReccomendQuestion(request_dict)
+        indices = Index.getRecommendQuestion(request_dict)
         index_schema = IndexSchema(many=True)
         indices_list = index_schema.dump(indices)
 

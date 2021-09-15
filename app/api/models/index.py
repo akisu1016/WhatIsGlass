@@ -333,7 +333,7 @@ class Index(db.Model):
             return index_list
 
     # お勧めの見出しを取得
-    def getReccomendQuestion(request_dict):
+    def getRecommendQuestion(request_dict):
 
         language_id_filters = []
         for language_id in request_dict["language_ids"]:
