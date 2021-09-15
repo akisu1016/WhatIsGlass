@@ -349,7 +349,7 @@ INSERT INTO answers(id, user_id, index_id, `definition`, origin, note) VALUES
 (19, 13, 19, 'アーケードゲームなどで、主に負けた腹いせなどとして、筐体を叩くなどの行為を意味する', '', '一般的に、迷惑行為とされるほか、筐体が破損した場合には器物損壊罪の適用もありうる');
 
 
-CREATE TABLE answers_infomative(
+CREATE TABLE answers_informative(
     answer_id INT,
     user_id INT,
     PRIMARY KEY(answer_id , user_id),
