@@ -315,7 +315,7 @@ CREATE TABLE answers(
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     index_id INT NOT NULL,
-    `definition` varchar(100) NOT NULL,
+    `definition` varchar(300) NOT NULL,
     origin varchar(300),
     note varchar(200),
     relevance INT NOT NULL default 30,
