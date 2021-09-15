@@ -37,19 +37,16 @@ class User(db.Model):
         if user is not None:
             return abort(400, {"message": "user is already registered"})
 
-        record = User(
+        new_user = User(
             username=username,
             email=email,
             password=password,
         )
 
-        db.session.add(record)
+        db.session.add(new_user)
         db.session.flush()
 
-        user = db.session.execute("SELECT * from users WHERE id = last_insert_id();")
-
-        for get_user_id in user:
-            user_id = get_user_id.id
+        user_id = new_user.id
 
         # ユーザー言語の登録
         for first_language in request_dict["first_languages"]:
@@ -73,14 +70,7 @@ class User(db.Model):
         db.session.flush()
         db.session.commit()
 
-        response = db.session.execute(
-            "SELECT * from users WHERE id = last_insert_id();"
-        )
-
-        if response is None:
-            return []
-        else:
-            return response
+        return new_user
 
     def loginUser(request_dict):
         email = request_dict["email"]
