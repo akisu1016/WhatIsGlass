@@ -191,7 +191,6 @@ class Index(db.Model):
             )
 
         index_list = index_list.filter(
-            Index.index.contains(f"{keyword}"),
             Index.language_id == language_id,
             User.id == Index.questioner,
             User.id == user_id,
