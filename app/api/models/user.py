@@ -70,7 +70,15 @@ class User(db.Model):
         db.session.flush()
         db.session.commit()
 
-        return new_user
+        access_token = access_token = create_access_token(identity=new_user)
+        new_user_with_token = {
+            "id": new_user.id,
+            "username": new_user.username,
+            "email": new_user.email,
+            "access_token": access_token,
+        }
+
+        return new_user_with_token
 
     def loginUser(request_dict):
         email = request_dict["email"]
