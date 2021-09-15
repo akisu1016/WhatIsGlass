@@ -192,13 +192,13 @@ class Answer(db.Model):
 
 
 class AnswerInformative(db.Model):
-    __tablename__ = "answers_infomative"
+    __tablename__ = "answers_informative"
 
     answer_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
     def __repr__(self):
-        return "<answers_infomative %r>" % self.answer_id, self.user_id
+        return "<answers_informative %r>" % self.answer_id, self.user_id
 
     def countupInformative(request):
         answer_id = request["answer_id"]
