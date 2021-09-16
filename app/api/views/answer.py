@@ -93,9 +93,9 @@ def registAnswer():
         abort(400, {"message": "parameter is a required"})
 
     try:
-        answer_id = Answer.registAnswer(answerData)
-        ExampleAnswer.registExampleAnswer(answerData["example"], answer_id)
-        response_query = Answer.makeResponseAnswer(answer_id)
+        answer = Answer.registAnswer(answerData)
+        ExampleAnswer.registExampleAnswer(answerData["example"], answer.id)
+        response_query = Answer.makeResponseAnswer(answer.id)
 
     except ValueError:
         abort(400, {"message": "value is invalid"})

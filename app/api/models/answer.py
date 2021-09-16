@@ -150,7 +150,6 @@ class Answer(db.Model):
 
         # answerの登録処理
         record = Answer(
-            id=0,
             user_id=1,
             index_id=answer["index_id"],
             definition=answer["definition"],
@@ -163,12 +162,8 @@ class Answer(db.Model):
         db.session.add(record)
         db.session.flush()
         db.session.commit()
-        answers_query = db.session.execute(
-            "SELECT * from answers WHERE id = last_insert_id();"
-        )
 
-        for get_answer_id in answers_query:
-            return int(get_answer_id.id)
+        return record
 
     def makeResponseAnswer(answer_id):
 
