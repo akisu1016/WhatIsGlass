@@ -100,7 +100,7 @@ def registAnswer():
     except ValueError:
         abort(400, {"message": "value is invalid"})
 
-    return make_response(jsonify({"code": 201, "answer": response_query}))
+    return make_response(jsonify({"code": 201, "answer": response_query[0]}))
 
 
 # 回答役に立つカウントアップAPI
