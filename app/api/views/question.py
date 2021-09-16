@@ -136,11 +136,11 @@ def registIndex():
 
     try:
         index = Index.registIndex(indexData)
-        index_schema = IndexSchema(many=True)
+        index_schema = IndexSchema()
     except ValueError:
         abort(400, {"message": "post failed"})
 
-    return make_response(jsonify({"code": 201, "index": index_schema.dump(index)[0]}))
+    return make_response(jsonify({"code": 201, "index": index_schema.dump(index)}))
 
 
 # ユーザー見出し一覧API

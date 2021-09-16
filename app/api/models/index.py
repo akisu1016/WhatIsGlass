@@ -396,7 +396,6 @@ class Index(db.Model):
 
     def registIndex(indices):
         record = Index(
-            id=0,
             index=indices["index"],
             questioner=indices["questioner"],
             language_id=indices["language_id"],
@@ -407,11 +406,7 @@ class Index(db.Model):
         db.session.flush()
         db.session.commit()
 
-        response = db.session.execute(
-            "SELECT * from indices WHERE id = last_insert_id();"
-        )
-
-        return response
+        return record
 
     def get_answer_count():
         # 回答者数を取得するためのクエリ
