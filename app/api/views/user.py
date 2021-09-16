@@ -223,7 +223,7 @@ def getLoginUser():
         user["community_tags"].append(
             {
                 "id": UserCommunityTagDict["community_tag_id"],
-                "community": UserCommunityTagDict["community_tag_name"],
+                "community_tag_name": UserCommunityTagDict["community_tag_name"],
             }
         )
     return make_response(jsonify({"code": 201, "user": user}))
@@ -270,7 +270,7 @@ def merge_user_list(user_list):
                 user_dict["community_tags"].append(
                     {
                         "id": community_tag_dict["community_tag_id"],
-                        "community": community_tag_dict["community_tag_name"],
+                        "community_tag_name": community_tag_dict["community_tag_name"],
                     }
                 )
         merge_user_list.append(user_dict)
