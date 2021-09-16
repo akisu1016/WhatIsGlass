@@ -84,12 +84,15 @@ def postUserSignup():
 
     try:
         user = User.registUser(userData)
-        user_schema = UserSchema(many=True)
-        user_list = user_schema.dump(user)
+        user_schema = UserSchema()
+        dumped_user = user_schema.dump(user)
+
+        response = jsonify({"code": 201, "user": merge_user_list([dumped_user])})
+        set_access_cookies(response, user["access_token"])
     except ValueError:
         abort(400, {"message": "sigunup failed"})
 
-    return make_response(jsonify({"code": 201, "user": merge_user_list(user_list)}))
+    return make_response(response)
 
 
 @user_router.route("/login", methods=["POST"])
