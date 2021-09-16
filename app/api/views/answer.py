@@ -93,14 +93,14 @@ def registAnswer():
         abort(400, {"message": "parameter is a required"})
 
     try:
-        answer_id = Answer.registAnswer(answerData)
-        ExampleAnswer.registExampleAnswer(answerData["example"], answer_id)
-        response_query = Answer.makeResponseAnswer(answer_id)
+        answer = Answer.registAnswer(answerData)
+        ExampleAnswer.registExampleAnswer(answerData["example"], answer.id)
+        response_query = Answer.makeResponseAnswer(answer.id)
 
     except ValueError:
         abort(400, {"message": "value is invalid"})
 
-    return make_response(jsonify({"code": 201, "answer": response_query}))
+    return make_response(jsonify({"code": 201, "answer": response_query[0]}))
 
 
 # 回答役に立つカウントアップAPI

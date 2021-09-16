@@ -99,20 +99,21 @@ class ValidateAnswer:
                 "SELECT id from categorytags where id = %s;"
                 % request_dict["category_tag_id"]
             )
-            categorytag_id = 0
+            categorytag_ids = []
             for get_categorytag_id in categorytag_query:
-                categorytag_id = get_categorytag_id.id
-                dict = {
-                    "category_tag_id": {
-                        "allowed": [categorytag_id],
-                        "required": True,
-                        "empty": False,
-                        "nullable": False,
-                        "coerce": int,
-                    }
-                }
-                schema.append(dict)
+                categorytag_ids.append(get_categorytag_id.id)
 
+            category_schema = {
+                "category_tag_id": {
+                    "allowed": categorytag_ids,
+                    "required": True,
+                    "empty": False,
+                    "nullable": False,
+                    "coerce": int,
+                }
+            }
+
+            schema.update(category_schema)
         # バリデータを作成
         v = Validator(schema)
 
